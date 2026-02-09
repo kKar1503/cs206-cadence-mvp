@@ -72,7 +72,7 @@ async function main() {
         verifiedByOfficial: true,
         authenticityScore: 98.5,
         sellerId: users[0]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Abbey+Road",
       },
     }),
     prisma.listing.create({
@@ -91,7 +91,7 @@ async function main() {
         verifiedByOfficial: false,
         authenticityScore: 92.3,
         sellerId: users[0]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1619983081563-430f63602796?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Kind+of+Blue",
       },
     }),
 
@@ -111,7 +111,7 @@ async function main() {
         isVerified: true,
         authenticityScore: 95.8,
         sellerId: users[1]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Rumours",
       },
     }),
     prisma.listing.create({
@@ -130,7 +130,7 @@ async function main() {
         verifiedByOfficial: true,
         authenticityScore: 97.2,
         sellerId: users[1]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1619983081593-e2ba5b543168?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Dark+Side+Moon",
       },
     }),
 
@@ -150,7 +150,7 @@ async function main() {
         isVerified: false,
         authenticityScore: 88.5,
         sellerId: users[2]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1584679109597-c656b19974c9?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Purple+Rain",
       },
     }),
     prisma.listing.create({
@@ -168,7 +168,7 @@ async function main() {
         isVerified: true,
         authenticityScore: 91.0,
         sellerId: users[2]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1619983081454-869a39464e8d?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Thriller",
       },
     }),
 
@@ -189,7 +189,7 @@ async function main() {
         verifiedByOfficial: true,
         authenticityScore: 96.5,
         sellerId: users[3]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Blue",
       },
     }),
     prisma.listing.create({
@@ -207,7 +207,7 @@ async function main() {
         isVerified: true,
         authenticityScore: 89.2,
         sellerId: users[3]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1619983081563-430f63602796?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Velvet+Underground",
       },
     }),
     prisma.listing.create({
@@ -225,7 +225,7 @@ async function main() {
         isVerified: false,
         authenticityScore: 87.8,
         sellerId: users[3]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Nevermind",
       },
     }),
 
@@ -246,7 +246,7 @@ async function main() {
         verifiedByOfficial: false,
         authenticityScore: 94.1,
         sellerId: users[4]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1619983081593-e2ba5b543168?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Whats+Going+On",
       },
     }),
     prisma.listing.create({
@@ -264,7 +264,7 @@ async function main() {
         isVerified: true,
         authenticityScore: 96.8,
         sellerId: users[4]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1584679109597-c656b19974c9?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=OK+Computer",
       },
     }),
     prisma.listing.create({
@@ -283,7 +283,7 @@ async function main() {
         verifiedByOfficial: true,
         authenticityScore: 99.5,
         sellerId: users[4]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1619983081454-869a39464e8d?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Random+Access",
       },
     }),
 
@@ -303,7 +303,7 @@ async function main() {
         isVerified: false,
         authenticityScore: 90.5,
         sellerId: users[0]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=In+Rainbows+CD",
       },
     }),
     prisma.listing.create({
@@ -319,7 +319,7 @@ async function main() {
         genre: "Rock",
         isVerified: false,
         sellerId: users[2]!.id,
-        imageUrl: "https://images.unsplash.com/photo-1619983081563-430f63602796?w=400",
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff?text=Beatles+Shirt",
       },
     }),
   ]);
