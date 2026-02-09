@@ -12,25 +12,66 @@ datasource db {
 }
 
 model User {
-    id        String   @id @default(cuid())
+    id        String    @id @default(cuid())
     name      String?
-    email     String   @unique
+    email     String    @unique
     password  String
     image     String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
 
-    posts Post[]
+    listings  Listing[]
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+enum ListingType {
+    VINYL
+    CD
+    CASSETTE
+    MERCH
+    EQUIPMENT
+}
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
+enum Condition {
+    MINT
+    NEAR_MINT
+    VERY_GOOD_PLUS
+    VERY_GOOD
+    GOOD_PLUS
+    GOOD
+    FAIR
+    POOR
+}
 
-    @@index([name])
+model Listing {
+    id                    String       @id @default(cuid())
+    title                 String
+    artist                String
+    description           String       @db.Text
+    type                  ListingType
+    condition             Condition
+    price                 Float
+    imageUrl              String?
+    year                  Int?
+    genre                 String?
+    label                 String?
+
+    // AI verification fields
+    isVerified            Boolean      @default(false)
+    verifiedByOfficial    Boolean      @default(false)
+    authenticityScore     Float?       // 0-100 probability score from AI
+
+    // Marketplace fields
+    isSold                Boolean      @default(false)
+    views                 Int          @default(0)
+
+    createdAt             DateTime     @default(now())
+    updatedAt             DateTime     @updatedAt
+
+    seller                User         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+    sellerId              String
+
+    @@index([title])
+    @@index([artist])
+    @@index([type])
+    @@index([sellerId])
 }
