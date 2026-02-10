@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, ShieldCheck, Eye } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Search, ShieldCheck, Eye, SlidersHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -109,85 +110,184 @@ export default function ListingsPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex gap-8">
-          {/* Filter Panel - Left Side */}
-          <aside className="w-64 shrink-0">
-            <div className="sticky top-8 space-y-6">
-              {/* Type Filter */}
-              <div>
-                <h3 className="mb-3 font-semibold">Type</h3>
-                <div className="space-y-2">
-                  {listingTypes.map((type) => (
-                    <div key={type} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`type-${type}`}
-                        checked={selectedTypes.includes(type)}
-                        onCheckedChange={() => toggleType(type)}
-                      />
-                      <label
-                        htmlFor={`type-${type}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {type}
-                      </label>
-                    </div>
-                  ))}
+        <div className="flex flex-col gap-8 lg:flex-row">
+          {/* Filter Panel - Left Side (Desktop) / Accordion (Mobile) */}
+          <aside className="w-full lg:w-64 lg:shrink-0">
+            {/* Desktop Filters */}
+            <div className="hidden lg:block">
+              <div className="sticky top-24 space-y-6">
+                {/* Type Filter */}
+                <div>
+                  <h3 className="mb-3 font-semibold">Type</h3>
+                  <div className="space-y-2">
+                    {listingTypes.map((type) => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`type-${type}`}
+                          checked={selectedTypes.includes(type)}
+                          onCheckedChange={() => toggleType(type)}
+                        />
+                        <label
+                          htmlFor={`type-${type}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {type}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Condition Filter */}
-              <div>
-                <h3 className="mb-3 font-semibold">Condition</h3>
-                <div className="space-y-2">
-                  {conditions.map((condition) => (
-                    <div key={condition} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`condition-${condition}`}
-                        checked={selectedConditions.includes(condition)}
-                        onCheckedChange={() => toggleCondition(condition)}
-                      />
-                      <label
-                        htmlFor={`condition-${condition}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {condition.replace(/_/g, " ")}
-                      </label>
-                    </div>
-                  ))}
+                {/* Condition Filter */}
+                <div>
+                  <h3 className="mb-3 font-semibold">Condition</h3>
+                  <div className="space-y-2">
+                    {conditions.map((condition) => (
+                      <div key={condition} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`condition-${condition}`}
+                          checked={selectedConditions.includes(condition)}
+                          onCheckedChange={() => toggleCondition(condition)}
+                        />
+                        <label
+                          htmlFor={`condition-${condition}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {condition.replace(/_/g, " ")}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Verified Filter */}
-              <div>
-                <h3 className="mb-3 font-semibold">Authenticity</h3>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="verified"
-                    checked={verifiedOnly}
-                    onCheckedChange={(checked) => setVerifiedOnly(checked as boolean)}
-                  />
-                  <label
-                    htmlFor="verified"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                {/* Verified Filter */}
+                <div>
+                  <h3 className="mb-3 font-semibold">Authenticity</h3>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="verified"
+                      checked={verifiedOnly}
+                      onCheckedChange={(checked) => setVerifiedOnly(checked as boolean)}
+                    />
+                    <label
+                      htmlFor="verified"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Verified only
+                    </label>
+                  </div>
+                </div>
+
+                {/* Reset Filters */}
+                {(selectedTypes.length > 0 || selectedConditions.length > 0 || verifiedOnly) && (
+                  <button
+                    onClick={() => {
+                      setSelectedTypes([]);
+                      setSelectedConditions([]);
+                      setVerifiedOnly(false);
+                    }}
+                    className="text-sm text-primary hover:underline"
                   >
-                    Verified only
-                  </label>
-                </div>
+                    Reset all filters
+                  </button>
+                )}
               </div>
+            </div>
 
-              {/* Reset Filters */}
-              {(selectedTypes.length > 0 || selectedConditions.length > 0 || verifiedOnly) && (
-                <button
-                  onClick={() => {
-                    setSelectedTypes([]);
-                    setSelectedConditions([]);
-                    setVerifiedOnly(false);
-                  }}
-                  className="text-sm text-primary hover:underline"
-                >
-                  Reset all filters
-                </button>
-              )}
+            {/* Mobile Filters - Accordion */}
+            <div className="lg:hidden">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="filters" className="border rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      <span className="font-semibold">Filters</span>
+                      {(selectedTypes.length > 0 || selectedConditions.length > 0 || verifiedOnly) && (
+                        <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                          {selectedTypes.length + selectedConditions.length + (verifiedOnly ? 1 : 0)}
+                        </span>
+                      )}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-6 pt-4">
+                    {/* Type Filter */}
+                    <div>
+                      <h3 className="mb-3 font-semibold">Type</h3>
+                      <div className="space-y-2">
+                        {listingTypes.map((type) => (
+                          <div key={`mobile-type-${type}`} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`mobile-type-${type}`}
+                              checked={selectedTypes.includes(type)}
+                              onCheckedChange={() => toggleType(type)}
+                            />
+                            <label
+                              htmlFor={`mobile-type-${type}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {type}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Condition Filter */}
+                    <div>
+                      <h3 className="mb-3 font-semibold">Condition</h3>
+                      <div className="space-y-2">
+                        {conditions.map((condition) => (
+                          <div key={`mobile-condition-${condition}`} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`mobile-condition-${condition}`}
+                              checked={selectedConditions.includes(condition)}
+                              onCheckedChange={() => toggleCondition(condition)}
+                            />
+                            <label
+                              htmlFor={`mobile-condition-${condition}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {condition.replace(/_/g, " ")}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Verified Filter */}
+                    <div>
+                      <h3 className="mb-3 font-semibold">Authenticity</h3>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="mobile-verified"
+                          checked={verifiedOnly}
+                          onCheckedChange={(checked) => setVerifiedOnly(checked as boolean)}
+                        />
+                        <label
+                          htmlFor="mobile-verified"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Verified only
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Reset Filters */}
+                    {(selectedTypes.length > 0 || selectedConditions.length > 0 || verifiedOnly) && (
+                      <button
+                        onClick={() => {
+                          setSelectedTypes([]);
+                          setSelectedConditions([]);
+                          setVerifiedOnly(false);
+                        }}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Reset all filters
+                      </button>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </aside>
 
