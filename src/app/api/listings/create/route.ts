@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
+import { ListingType, Condition } from "@prisma/client";
 
 export async function POST(request: Request) {
   try {
@@ -62,8 +63,8 @@ export async function POST(request: Request) {
         title,
         artist,
         description,
-        type,
-        condition,
+        type: type as ListingType,
+        condition: condition as Condition,
         price,
         images: JSON.stringify(images ?? []),
         imageUrl: images[0] ?? null, // First image for backward compatibility
