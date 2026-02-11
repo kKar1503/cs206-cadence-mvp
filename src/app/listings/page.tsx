@@ -18,6 +18,7 @@ interface Listing {
   type: string;
   condition: string;
   price: number;
+  images: string;
   imageUrl: string | null;
   year: number | null;
   genre: string | null;
@@ -54,6 +55,15 @@ export default function ListingsPage() {
       HEAVILY_USED: "Has obvious signs of use or defects.",
     };
     return descriptions[condition] ?? "";
+  };
+
+  const getFirstImage = (listing: Listing): string => {
+    try {
+      const images = JSON.parse(listing.images) as string[];
+      return images[0] ?? listing.imageUrl ?? "https://placehold.co/400x400/fc6736/ffffff?text=No+Image";
+    } catch {
+      return listing.imageUrl ?? "https://placehold.co/400x400/fc6736/ffffff?text=No+Image";
+    }
   };
 
   useEffect(() => {
@@ -340,7 +350,7 @@ export default function ListingsPage() {
                         <CardHeader className="p-0">
                           <div className="relative aspect-square overflow-hidden">
                             <Image
-                              src={listing.imageUrl ?? "https://placehold.co/400x400/fc6736/ffffff?text=No+Image"}
+                              src={getFirstImage(listing)}
                               alt={listing.title}
                               fill
                               className="object-cover transition-transform group-hover:scale-105"

@@ -47,7 +47,8 @@ model Listing {
     type                  ListingType
     condition             Condition
     price                 Float
-    imageUrl              String?
+    images                String       @db.Text  // JSON array of image URLs
+    imageUrl              String?      // Deprecated, keeping for backward compatibility
     year                  Int?
     genre                 String?
     label                 String?
