@@ -18,7 +18,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-destructive/5 to-background px-4">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-gradient-to-b from-destructive/5 to-background px-4 py-12">
       <div className="text-center">
         <div className="mb-8 flex items-center justify-center gap-3">
           <Disc3 className="h-16 w-16 text-primary" />

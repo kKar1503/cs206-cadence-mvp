@@ -12,6 +12,10 @@ const config = {
         protocol: "https",
         hostname: "placehold.co",
       },
+      {
+        protocol: "https",
+        hostname: "cadence-asset.karlok.dev",
+      },
     ],
   },
 };
