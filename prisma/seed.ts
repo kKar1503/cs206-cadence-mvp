@@ -63,7 +63,7 @@ async function main() {
         description:
           "Classic Beatles album in excellent condition. Original UK pressing from 1969. Gatefold sleeve with original inserts. Vinyl plays perfectly with minimal surface noise.",
         type: "VINYL",
-        condition: "VERY_GOOD_PLUS",
+        condition: "LIGHTLY_USED",
         price: 89.99,
         year: 1969,
         genre: "Rock",
@@ -82,7 +82,7 @@ async function main() {
         description:
           "Iconic jazz masterpiece. 1959 original pressing on Columbia Records. Cover shows some wear but vinyl is in great shape. A must-have for any jazz collection.",
         type: "VINYL",
-        condition: "VERY_GOOD",
+        condition: "WELL_USED",
         price: 125.00,
         year: 1959,
         genre: "Jazz",
@@ -103,7 +103,7 @@ async function main() {
         description:
           "1977 first pressing. One of the best-selling albums of all time. Near mint condition, barely played. Includes original inner sleeve with lyrics.",
         type: "VINYL",
-        condition: "NEAR_MINT",
+        condition: "LIKE_NEW",
         price: 65.50,
         year: 1977,
         genre: "Rock",
@@ -121,7 +121,7 @@ async function main() {
         description:
           "Legendary progressive rock album. Original 1973 UK pressing with poster and stickers. Vinyl in excellent condition. Sound quality is superb.",
         type: "VINYL",
-        condition: "VERY_GOOD_PLUS",
+        condition: "LIGHTLY_USED",
         price: 110.00,
         year: 1973,
         genre: "Progressive Rock",
@@ -142,7 +142,7 @@ async function main() {
         description:
           "Classic 1984 album with the original poster insert. Vinyl has been well cared for. Some minor shelf wear on the cover but overall great condition.",
         type: "VINYL",
-        condition: "VERY_GOOD",
+        condition: "WELL_USED",
         price: 45.00,
         year: 1984,
         genre: "Pop/Rock",
@@ -160,7 +160,7 @@ async function main() {
         description:
           "Best-selling album of all time! 1982 original pressing. Cover has some wear but vinyl plays great. All-time classic pop album in good collectible condition.",
         type: "VINYL",
-        condition: "GOOD_PLUS",
+        condition: "WELL_USED",
         price: 38.99,
         year: 1982,
         genre: "Pop",
@@ -180,7 +180,7 @@ async function main() {
         description:
           "Folk masterpiece from 1971. Gatefold cover in excellent condition. Vinyl is clean with very minimal surface noise. One of the greatest albums ever made.",
         type: "VINYL",
-        condition: "VERY_GOOD_PLUS",
+        condition: "LIGHTLY_USED",
         price: 75.00,
         year: 1971,
         genre: "Folk",
@@ -199,7 +199,7 @@ async function main() {
         description:
           "Iconic 1967 album with the famous Andy Warhol banana cover. Second pressing from 1970s. Highly sought after by collectors. Cover shows age but vinyl plays well.",
         type: "VINYL",
-        condition: "VERY_GOOD",
+        condition: "WELL_USED",
         price: 195.00,
         year: 1967,
         genre: "Art Rock",
@@ -217,7 +217,7 @@ async function main() {
         description:
           "Grunge classic from 1991. First pressing with original track listing. Includes lyric sheet. Vinyl has some light scratches but plays through without skipping.",
         type: "VINYL",
-        condition: "GOOD_PLUS",
+        condition: "WELL_USED",
         price: 55.00,
         year: 1991,
         genre: "Grunge/Rock",
@@ -237,7 +237,7 @@ async function main() {
         description:
           "Soul masterpiece from 1971. Original Tamla pressing. Gatefold cover with minimal wear. Vinyl is clean and plays beautifully. Essential soul collection piece.",
         type: "VINYL",
-        condition: "VERY_GOOD_PLUS",
+        condition: "LIGHTLY_USED",
         price: 95.00,
         year: 1971,
         genre: "Soul/R&B",
@@ -256,7 +256,7 @@ async function main() {
         description:
           "Modern classic from 1997. First UK pressing. Double LP in gatefold sleeve. Vinyl is in near-perfect condition with only a few plays. Cover is pristine.",
         type: "VINYL",
-        condition: "NEAR_MINT",
+        condition: "LIKE_NEW",
         price: 85.00,
         year: 1997,
         genre: "Alternative Rock",
@@ -274,7 +274,7 @@ async function main() {
         description:
           "2013 electronic masterpiece. Limited edition double LP. Pristine mint condition, still in shrink wrap. Never played. Perfect for collectors.",
         type: "VINYL",
-        condition: "MINT",
+        condition: "BRAND_NEW",
         price: 120.00,
         year: 2013,
         genre: "Electronic",
@@ -295,7 +295,7 @@ async function main() {
         description:
           "Special edition CD with bonus disc. Includes booklet and artwork. CD is in perfect condition. 2007 release.",
         type: "CD",
-        condition: "NEAR_MINT",
+        condition: "LIKE_NEW",
         price: 25.00,
         year: 2007,
         genre: "Alternative Rock",
@@ -313,7 +313,7 @@ async function main() {
         description:
           "Original 1990s vintage Beatles t-shirt. Size Large. Some fading but no holes or tears. Rare collectible merchandise from the Anthology era.",
         type: "MERCH",
-        condition: "GOOD",
+        condition: "HEAVILY_USED",
         price: 45.00,
         year: 1995,
         genre: "Rock",

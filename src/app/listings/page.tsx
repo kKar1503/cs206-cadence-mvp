@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Search, ShieldCheck, Eye, SlidersHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,7 +39,22 @@ export default function ListingsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const listingTypes = ["VINYL", "CD", "CASSETTE", "MERCH", "EQUIPMENT"];
-  const conditions = ["MINT", "NEAR_MINT", "VERY_GOOD_PLUS", "VERY_GOOD", "GOOD_PLUS", "GOOD"];
+  const conditions = ["BRAND_NEW", "LIKE_NEW", "LIGHTLY_USED", "WELL_USED", "HEAVILY_USED"];
+
+  const getConditionLabel = (condition: string) => {
+    return condition.replace(/_/g, " ");
+  };
+
+  const getConditionDescription = (condition: string) => {
+    const descriptions: Record<string, string> = {
+      BRAND_NEW: "Never used. May come with original packaging or tag.",
+      LIKE_NEW: "Used once or twice. As good as new.",
+      LIGHTLY_USED: "Used with care. Flaws, if any, are barely noticeable.",
+      WELL_USED: "Has minor flaws or defects.",
+      HEAVILY_USED: "Has obvious signs of use or defects.",
+    };
+    return descriptions[condition] ?? "";
+  };
 
   useEffect(() => {
     void fetchListings();
@@ -148,12 +164,19 @@ export default function ListingsPage() {
                           checked={selectedConditions.includes(condition)}
                           onCheckedChange={() => toggleCondition(condition)}
                         />
-                        <label
-                          htmlFor={`condition-${condition}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {condition.replace(/_/g, " ")}
-                        </label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <label
+                              htmlFor={`condition-${condition}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-help"
+                            >
+                              {getConditionLabel(condition)}
+                            </label>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p className="max-w-xs">{getConditionDescription(condition)}</p>
+                          </TooltipContent>
+                        </Tooltip>
                       </div>
                     ))}
                   </div>
@@ -242,12 +265,19 @@ export default function ListingsPage() {
                               checked={selectedConditions.includes(condition)}
                               onCheckedChange={() => toggleCondition(condition)}
                             />
-                            <label
-                              htmlFor={`mobile-condition-${condition}`}
-                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              {condition.replace(/_/g, " ")}
-                            </label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <label
+                                  htmlFor={`mobile-condition-${condition}`}
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-help"
+                                >
+                                  {getConditionLabel(condition)}
+                                </label>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p className="max-w-xs">{getConditionDescription(condition)}</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         ))}
                       </div>
@@ -337,9 +367,16 @@ export default function ListingsPage() {
                             <span className="rounded-full bg-primary/10 px-2 py-1 text-primary">
                               {listing.type}
                             </span>
-                            <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground">
-                              {listing.condition.replace(/_/g, " ")}
-                            </span>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground cursor-help">
+                                  {getConditionLabel(listing.condition)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">{getConditionDescription(listing.condition)}</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
 
                           {listing.genre && (

@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { NavHeader } from "@/components/nav-header";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "Cadence - AI-Driven Music Marketplace Intelligence",
@@ -23,8 +24,10 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable}`}>
       <body>
         <Providers>
-          <NavHeader />
-          {children}
+          <TooltipProvider>
+            <NavHeader />
+            {children}
+          </TooltipProvider>
         </Providers>
       </body>
     </html>

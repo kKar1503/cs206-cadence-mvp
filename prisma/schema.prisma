@@ -32,14 +32,11 @@ enum ListingType {
 }
 
 enum Condition {
-    MINT
-    NEAR_MINT
-    VERY_GOOD_PLUS
-    VERY_GOOD
-    GOOD_PLUS
-    GOOD
-    FAIR
-    POOR
+    BRAND_NEW
+    LIKE_NEW
+    LIGHTLY_USED
+    WELL_USED
+    HEAVILY_USED
 }
 
 model Listing {
