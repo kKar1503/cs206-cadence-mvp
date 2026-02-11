@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import { ListingType, Condition } from "@prisma/client";
+import type { ListingType, Condition } from "../../../generated/prisma";
 
 export async function POST(request: Request) {
   try {
