@@ -71,7 +71,7 @@ export function NavHeader() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9">
-                      <AvatarImage src={session.user.image || undefined} alt={session.user.name || "User"} />
+                      <AvatarImage src={session.user.image ?? undefined} alt={session.user.name ?? "User"} />
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         {getInitials(session.user.name)}
                       </AvatarFallback>
@@ -81,7 +81,7 @@ export function NavHeader() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{session.user.name || "User"}</p>
+                      <p className="text-sm font-medium leading-none">{session.user.name ?? "User"}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {session.user.email}
                       </p>

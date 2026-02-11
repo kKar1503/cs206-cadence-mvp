@@ -53,10 +53,10 @@ export default function SignUpPage() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as { error?: string };
 
       if (!response.ok) {
-        throw new Error(data.error || "Something went wrong");
+        throw new Error(data.error ?? "Something went wrong");
       }
 
       // Redirect to signin page after successful signup

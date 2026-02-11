@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = await request.json() as { email?: string; password?: string; name?: string };
     const { email, password, name } = body;
 
     // Validation
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       data: {
         email,
         password: hashedPassword,
-        name: name || null,
+        name: name ?? null,
       },
       select: {
         id: true,

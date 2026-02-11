@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -42,13 +41,13 @@ export default function ListingsPage() {
   const conditions = ["MINT", "NEAR_MINT", "VERY_GOOD_PLUS", "VERY_GOOD", "GOOD_PLUS", "GOOD"];
 
   useEffect(() => {
-    fetchListings();
+    void fetchListings();
   }, []);
 
   const fetchListings = async () => {
     try {
       const response = await fetch("/api/listings");
-      const data = await response.json();
+      const data = await response.json() as Listing[];
       setListings(data);
     } catch (error) {
       console.error("Error fetching listings:", error);
@@ -311,7 +310,7 @@ export default function ListingsPage() {
                         <CardHeader className="p-0">
                           <div className="relative aspect-square overflow-hidden">
                             <Image
-                              src={listing.imageUrl || "https://placehold.co/400x400/fc6736/ffffff?text=No+Image"}
+                              src={listing.imageUrl ?? "https://placehold.co/400x400/fc6736/ffffff?text=No+Image"}
                               alt={listing.title}
                               fill
                               className="object-cover transition-transform group-hover:scale-105"
@@ -348,7 +347,7 @@ export default function ListingsPage() {
                           )}
 
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>by {listing.seller.name || "Anonymous"}</span>
+                            <span>by {listing.seller.name ?? "Anonymous"}</span>
                             <div className="flex items-center gap-1">
                               <Eye className="h-3 w-3" />
                               <span>{listing.views}</span>

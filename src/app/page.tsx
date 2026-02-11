@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Disc3, ShieldCheck, TrendingUp, Search, Sparkles, Package, CheckCircle2, BarChart3 } from "lucide-react";
-import { FadeInSection, StaggeredGrid } from "@/components/ui/fade-in-section";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Disc3, ShieldCheck, Search, Sparkles, Package, CheckCircle2, BarChart3 } from "lucide-react";
+import { StaggeredGrid } from "@/components/ui/fade-in-section";
 
 export default function HomePage() {
   return (

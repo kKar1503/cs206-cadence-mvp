@@ -27,7 +27,7 @@ export default function Error({
         <h1 className="mb-4 text-6xl font-bold text-foreground">Oops!</h1>
         <h2 className="mb-4 text-2xl font-semibold text-foreground">Something went wrong</h2>
         <p className="mb-8 max-w-md text-lg text-muted-foreground">
-          We encountered an unexpected error. Don't worry, it's not your fault. Please try again.
+          We encountered an unexpected error. Don&apos;t worry, it&apos;s not your fault. Please try again.
         </p>
 
         {process.env.NODE_ENV === "development" && error.message && (
