@@ -307,7 +307,7 @@ export default function ListingsPage() {
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredListings.map((listing) => (
                     <Link key={listing.id} href={`/listings/${listing.id}`}>
-                      <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg">
+                      <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg py-0 gap-0">
                         <CardHeader className="p-0">
                           <div className="relative aspect-square overflow-hidden">
                             <Image
