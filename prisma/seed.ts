@@ -10,10 +10,18 @@ async function main() {
   await prisma.listing.deleteMany();
   await prisma.user.deleteMany();
 
-  // Create 5 users
+  // Create admin user and regular users
   const password = await hash("password123", 12);
 
   const users = await Promise.all([
+    // Admin user
+    prisma.user.create({
+      data: {
+        name: "Admin",
+        email: "admin@abc.com",
+        password,
+      },
+    }),
     prisma.user.create({
       data: {
         name: "Alex Chen",
@@ -51,7 +59,7 @@ async function main() {
     }),
   ]);
 
-  console.log(`Created ${users.length} users`);
+  console.log(`Created ${users.length} users (including admin@abc.com)`);
 
   // Create vinyl listings with realistic data
   const listings = await Promise.all([
