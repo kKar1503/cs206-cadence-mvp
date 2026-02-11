@@ -197,7 +197,7 @@ export default function ListingsPage() {
             {/* Mobile Filters - Accordion */}
             <div className="lg:hidden">
               <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="filters" className="border rounded-lg px-4">
+                <AccordionItem value="filters" className="rounded-lg border px-4">
                   <AccordionTrigger className="hover:no-underline">
                     <div className="flex items-center gap-2">
                       <SlidersHorizontal className="h-4 w-4" />
@@ -307,9 +307,9 @@ export default function ListingsPage() {
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {filteredListings.map((listing) => (
                     <Link key={listing.id} href={`/listings/${listing.id}`}>
-                      <Card className="group h-full cursor-pointer transition-all hover:shadow-lg">
+                      <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg">
                         <CardHeader className="p-0">
-                          <div className="relative aspect-square overflow-hidden rounded-t-lg">
+                          <div className="relative aspect-square overflow-hidden">
                             <Image
                               src={listing.imageUrl || "https://placehold.co/400x400/fc6736/ffffff?text=No+Image"}
                               alt={listing.title}
