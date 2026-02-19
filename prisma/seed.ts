@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Starting seed...");
 
-  // Clear existing data
+  // Clear existing data (order matters due to FK constraints)
+  await prisma.review.deleteMany();
   await prisma.listing.deleteMany();
   await prisma.user.deleteMany();
 
@@ -307,6 +308,26 @@ async function main() {
       },
     }),
 
+    // Extra listing for Emma Thompson (so she can get a 4th review)
+    prisma.listing.create({
+      data: {
+        title: "Blonde on Blonde",
+        artist: "Bob Dylan",
+        description:
+          "1966 double LP original pressing. One of Dylan's finest. Cover shows some wear but the vinyl plays beautifully. Includes original gatefold.",
+        type: "VINYL",
+        condition: "WELL_USED",
+        price: 80.00,
+        year: 1966,
+        genre: "Folk Rock",
+        label: "Columbia",
+        isVerified: false,
+        sellerId: users[4]!.id,
+        images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Blonde+on+Blonde"]),
+        imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Blonde+on+Blonde",
+      },
+    }),
+
     // Add a few CD and merch listings
     prisma.listing.create({
       data: {
@@ -347,6 +368,129 @@ async function main() {
   ]);
 
   console.log(`Created ${listings.length} listings`);
+
+  // listings[0]  = Abbey Road         (seller: users[0] Admin)
+  // listings[1]  = Kind of Blue       (seller: users[0] Admin)
+  // listings[2]  = Rumours            (seller: users[1] Alex)
+  // listings[3]  = Dark Side of Moon  (seller: users[1] Alex)
+  // listings[4]  = Purple Rain        (seller: users[2] Sarah)
+  // listings[5]  = Thriller           (seller: users[2] Sarah)
+  // listings[6]  = Blue               (seller: users[3] Marcus)
+  // listings[7]  = Velvet Underground (seller: users[3] Marcus)
+  // listings[8]  = Nevermind          (seller: users[3] Marcus)
+  // listings[9]  = What's Going On    (seller: users[4] Emma)
+  // listings[10] = OK Computer        (seller: users[4] Emma)
+  // listings[11] = Random Access Mem  (seller: users[4] Emma)
+  // listings[12] = Blonde on Blonde   (seller: users[4] Emma)
+  // listings[13] = In Rainbows CD     (seller: users[0] Admin)
+  // listings[14] = Beatles Shirt      (seller: users[2] Sarah)
+
+  // Seed reviews — buyers review sellers after a transaction
+  // Reviews for Alex Chen (users[1]) — seller of Rumours and Dark Side
+  // Reviews for Sarah Martinez (users[2]) — seller of Purple Rain and Thriller
+  // Reviews for Emma Thompson (users[4]) — seller of OK Computer and RAM
+  // Reviews for David Lee (users[5]) — no listings yet, skip
+  const reviews = await Promise.all([
+    // Reviews on Alex Chen (users[1]) — sellers of listings[2] and listings[3]
+    prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "Super smooth transaction! The vinyl was exactly as described — near mint. Came well packed too. Would definitely buy from Alex again!",
+        sellerId: users[1]!.id,
+        reviewerId: users[3]!.id, // Marcus reviews Alex
+        listingId: listings[2]!.id, // Rumours listing
+      },
+    }),
+    prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "Incredible copy of Dark Side of the Moon. Came with all the inserts. Fast shipping and very communicative seller. Highly recommended!",
+        sellerId: users[1]!.id,
+        reviewerId: users[4]!.id, // Emma reviews Alex
+        listingId: listings[3]!.id, // Dark Side of Moon listing
+      },
+    }),
+
+    // Reviews on Sarah Martinez (users[2]) — sellers of listings[4] and listings[5]
+    prisma.review.create({
+      data: {
+        rating: 4,
+        comment: "Good seller, item was as described. Purple Rain vinyl plays great. Minor cover wear was slightly more than photos showed but still happy with it.",
+        sellerId: users[2]!.id,
+        reviewerId: users[1]!.id, // Alex reviews Sarah
+        listingId: listings[4]!.id, // Purple Rain listing
+      },
+    }),
+    prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "Absolutely love this Thriller pressing. Sarah was quick to respond and the item arrived in perfect condition. Great seller!",
+        sellerId: users[2]!.id,
+        reviewerId: users[5]!.id, // David reviews Sarah
+        listingId: listings[5]!.id, // Thriller listing
+      },
+    }),
+
+    // Reviews on Marcus Johnson (users[3]) — sellers of listings[6], [7], [8]
+    prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "What a gem! Joni Mitchell Blue in lightly used condition is everything. Marcus described everything accurately and was easy to deal with.",
+        sellerId: users[3]!.id,
+        reviewerId: users[2]!.id, // Sarah reviews Marcus
+        listingId: listings[6]!.id, // Blue listing
+      },
+    }),
+    prisma.review.create({
+      data: {
+        rating: 3,
+        comment: "Took a while to ship but the record arrived safely. VU & Nico sounds great, condition is fair as described. Communication could have been better.",
+        sellerId: users[3]!.id,
+        reviewerId: users[4]!.id, // Emma reviews Marcus
+        listingId: listings[7]!.id, // Velvet Underground listing
+      },
+    }),
+
+    // Reviews on Emma Thompson (users[4]) — sellers of listings[9], [10], [11]
+    prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "Sealed, brand new, and delivered super fast. Emma was a pleasure to deal with — very responsive. Random Access Memories sounds absolutely stunning!",
+        sellerId: users[4]!.id,
+        reviewerId: users[1]!.id, // Alex reviews Emma
+        listingId: listings[11]!.id, // Random Access Memories listing
+      },
+    }),
+    prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "OK Computer first pressing — this is exactly what I was after. Great condition, great price, great seller. 10/10 would buy again.",
+        sellerId: users[4]!.id,
+        reviewerId: users[3]!.id, // Marcus reviews Emma
+        listingId: listings[10]!.id, // OK Computer listing
+      },
+    }),
+    prisma.review.create({
+      data: {
+        rating: 4,
+        comment: "What's Going On is a soul classic and this copy is beautiful. Slight crackle on one track but nothing major. Very happy with the purchase!",
+        sellerId: users[4]!.id,
+        reviewerId: users[2]!.id, // Sarah reviews Emma
+        listingId: listings[9]!.id, // What's Going On listing
+      },
+    }),
+    prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "Blonde on Blonde is an absolute treasure. Emma packed it really well and it arrived in perfect condition. One of my best purchases on here!",
+        sellerId: users[4]!.id,
+        reviewerId: users[0]!.id, // Admin reviews Emma
+        listingId: listings[12]!.id, // Blonde on Blonde listing
+      },
+    }),
+  ]);
+
+  console.log(`Created ${reviews.length} reviews`);
   console.log("Seed completed successfully!");
 }
 

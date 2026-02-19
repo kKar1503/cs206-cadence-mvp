@@ -20,7 +20,9 @@ model User {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    listings  Listing[]
+    listings         Listing[]
+    reviewsReceived  Review[]  @relation("ReviewSeller")
+    reviewsGiven     Review[]  @relation("ReviewBuyer")
 }
 
 enum ListingType {
@@ -67,9 +69,31 @@ model Listing {
 
     seller                User         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
     sellerId              String
+    review                Review?
 
     @@index([title])
     @@index([artist])
     @@index([type])
     @@index([sellerId])
+}
+
+// A review is left by a buyer (reviewer) about a seller (seller), tied to a specific listing
+model Review {
+    id          String   @id @default(cuid())
+    rating      Int      // 1-5
+    comment     String   @db.Text
+
+    seller      User     @relation("ReviewSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+    sellerId    String
+
+    reviewer    User     @relation("ReviewBuyer", fields: [reviewerId], references: [id], onDelete: Cascade)
+    reviewerId  String
+
+    listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    listingId   String   @unique  // one review per listing transaction
+
+    createdAt   DateTime @default(now())
+
+    @@index([sellerId])
+    @@index([reviewerId])
 }
