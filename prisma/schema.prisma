@@ -23,6 +23,9 @@ model User {
     listings         Listing[]
     reviewsReceived  Review[]  @relation("ReviewSeller")
     reviewsGiven     Review[]  @relation("ReviewBuyer")
+    ordersBought     Order[]   @relation("OrderBuyer")
+    ordersSold       Order[]   @relation("OrderSeller")
+    favorites        Favorite[]
 }
 
 enum ListingType {
@@ -59,6 +62,7 @@ model Listing {
     isVerified            Boolean      @default(false)
     verifiedByOfficial    Boolean      @default(false)
     authenticityScore     Float?       // 0-100 probability score from AI
+    verificationSource    String?      // Organization that verified (e.g., "Discogs", "Vinyl Authenticators Inc.")
 
     // Marketplace fields
     isSold                Boolean      @default(false)
@@ -70,6 +74,8 @@ model Listing {
     seller                User         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
     sellerId              String
     review                Review?
+    orders                Order[]
+    favorites             Favorite[]
 
     @@index([title])
     @@index([artist])
@@ -96,4 +102,44 @@ model Review {
 
     @@index([sellerId])
     @@index([reviewerId])
+}
+
+model Order {
+    id          String   @id @default(cuid())
+    orderNumber String   @unique
+
+    buyer       User     @relation("OrderBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+    buyerId     String
+
+    listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    listingId   String
+
+    seller      User     @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+    sellerId    String
+
+    amount      Float
+    status      String   @default("completed") // completed, pending, cancelled
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([buyerId])
+    @@index([sellerId])
+    @@index([listingId])
+}
+
+model Favorite {
+    id        String   @id @default(cuid())
+
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId    String
+
+    listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    listingId String
+
+    createdAt DateTime @default(now())
+
+    @@unique([userId, listingId]) // Prevent duplicate favorites
+    @@index([userId])
+    @@index([listingId])
 }
