@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Disc3, User, LogOut, Plus, Heart } from "lucide-react";
+import { User, LogOut, Plus, Heart, ShoppingBag } from "lucide-react";
 
 export function NavHeader() {
   const { data: session, status } = useSession();
@@ -33,9 +34,15 @@ export function NavHeader() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo and Navigation */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <Disc3 className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Cadence</span>
+          <Link href="/" className="transition-opacity hover:opacity-80">
+            <Image
+              src="/cadence-logo.png"
+              alt="Cadence - The Music Marketplace"
+              width={150}
+              height={60}
+              className="h-8 w-auto"
+              priority
+            />
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
@@ -91,13 +98,13 @@ export function NavHeader() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
+                      <span>My Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/my-listings" className="cursor-pointer">
-                      <Disc3 className="mr-2 h-4 w-4" />
-                      <span>My Listings</span>
+                    <Link href="/orders" className="cursor-pointer">
+                      <ShoppingBag className="mr-2 h-4 w-4" />
+                      <span>My Orders</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
