@@ -25,6 +25,10 @@ import {
   Star,
   Edit,
   Heart,
+  TrendingDown,
+  TrendingUp,
+  Minus,
+  Info,
 } from "lucide-react";
 
 interface Seller {
@@ -54,6 +58,9 @@ interface Listing {
   verificationSource: string | null;
   isSold: boolean;
   views: number;
+  priceLabel: string | null;
+  pricePercentage: number | null;
+  priceDataUpdated: string | null;
   createdAt: string;
   seller: Seller;
 }
@@ -121,6 +128,42 @@ const getAllImages = (images: string, imageUrl: string | null): string[] => {
 
 const getTypeLabel = (type: string) =>
   ({ VINYL: "Vinyl", CD: "CD", CASSETTE: "Cassette", MERCH: "Merch", EQUIPMENT: "Equipment" }[type] ?? type);
+
+const getPriceLabelInfo = (priceLabel: string | null) => {
+  if (!priceLabel) return null;
+
+  switch (priceLabel) {
+    case "UNDERPRICED":
+      return {
+        icon: TrendingDown,
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+        borderColor: "border-green-200",
+        label: "Great Deal",
+        description: "below market average",
+      };
+    case "OVERPRICED":
+      return {
+        icon: TrendingUp,
+        color: "text-red-600",
+        bgColor: "bg-red-50",
+        borderColor: "border-red-200",
+        label: "Above Market",
+        description: "above market average",
+      };
+    case "FAIR":
+      return {
+        icon: Minus,
+        color: "text-yellow-600",
+        bgColor: "bg-yellow-50",
+        borderColor: "border-yellow-200",
+        label: "Fair Price",
+        description: "within market average",
+      };
+    default:
+      return null;
+  }
+};
 
 // Renders 1–5 filled/empty stars
 function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" | "lg" }) {
@@ -399,6 +442,52 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               <h1 className="text-3xl font-bold leading-tight">{listing.title}</h1>
               <p className="mt-1 text-xl text-muted-foreground">{listing.artist}</p>
               <p className="mt-4 text-4xl font-bold text-primary">${listing.price.toFixed(2)}</p>
+
+              {/* Price Comparison */}
+              {listing.priceLabel && listing.pricePercentage && (() => {
+                const priceInfo = getPriceLabelInfo(listing.priceLabel);
+                if (!priceInfo) return null;
+                const Icon = priceInfo.icon;
+                const formattedDate = listing.priceDataUpdated
+                  ? new Date(listing.priceDataUpdated).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })
+                  : null;
+                return (
+                  <Card className={`mt-3 ${priceInfo.borderColor} ${priceInfo.bgColor}`}>
+                    <CardContent className="flex items-start gap-3 p-4">
+                      <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${priceInfo.color}`} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm font-semibold ${priceInfo.color}`}>
+                            {priceInfo.label}
+                          </p>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className={`h-4 w-4 cursor-help ${priceInfo.color}`} />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs text-xs">
+                                Price comparison based on market data from similar listings
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <p className={`text-sm ${priceInfo.color}`}>
+                          {listing.pricePercentage.toFixed(1)}% {priceInfo.description}
+                        </p>
+                        {formattedDate && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Data updated: {formattedDate}
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
             </div>
 
             <Separator />
@@ -453,7 +542,12 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     Buy Now — ${listing.price.toFixed(2)}
                   </Button>
                   <Button size="lg" variant="outline" className="flex-1 gap-2"
-                    onClick={() => router.push(`/chat/${listing.seller.id}?listing=${listing.id}`)}>
+                    onClick={() => {
+                      const event = new CustomEvent("startNewChat", {
+                        detail: { otherUserId: listing.seller.id, listingId: listing.id }
+                      });
+                      window.dispatchEvent(event);
+                    }}>
                     <MessageCircle className="h-5 w-5" />
                     Chat with Seller
                   </Button>
