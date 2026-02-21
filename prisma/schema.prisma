@@ -20,12 +20,15 @@ model User {
     createdAt DateTime  @default(now())
     updatedAt DateTime  @updatedAt
 
-    listings         Listing[]
-    reviewsReceived  Review[]  @relation("ReviewSeller")
-    reviewsGiven     Review[]  @relation("ReviewBuyer")
-    ordersBought     Order[]   @relation("OrderBuyer")
-    ordersSold       Order[]   @relation("OrderSeller")
-    favorites        Favorite[]
+    listings              Listing[]
+    reviewsReceived       Review[]       @relation("ReviewSeller")
+    reviewsGiven          Review[]       @relation("ReviewBuyer")
+    ordersBought          Order[]        @relation("OrderBuyer")
+    ordersSold            Order[]        @relation("OrderSeller")
+    favorites             Favorite[]
+    messagesSent          Message[]      @relation("MessageSender")
+    conversationsStarted  Conversation[] @relation("ConversationUser1")
+    conversationsReceived Conversation[] @relation("ConversationUser2")
 }
 
 enum ListingType {
@@ -68,14 +71,20 @@ model Listing {
     isSold                Boolean      @default(false)
     views                 Int          @default(0)
 
+    // Price comparison fields
+    priceLabel            String?      // "OVERPRICED", "FAIR", "UNDERPRICED"
+    pricePercentage       Float?       // Percentage difference from market price (e.g., 15.5 for 15.5% overpriced)
+    priceDataUpdated      DateTime?    // Date when price comparison data was last updated
+
     createdAt             DateTime     @default(now())
     updatedAt             DateTime     @updatedAt
 
-    seller                User         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+    seller                User           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
     sellerId              String
     review                Review?
     orders                Order[]
     favorites             Favorite[]
+    conversations         Conversation[]
 
     @@index([title])
     @@index([artist])
@@ -142,4 +151,47 @@ model Favorite {
     @@unique([userId, listingId]) // Prevent duplicate favorites
     @@index([userId])
     @@index([listingId])
+}
+
+// Conversation between two users about a specific listing
+model Conversation {
+    id             String    @id @default(cuid())
+
+    user1          User      @relation("ConversationUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+    user1Id        String
+
+    user2          User      @relation("ConversationUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+    user2Id        String
+
+    listing        Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    listingId      String    // Each conversation is tied to a specific listing
+
+    createdAt      DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+
+    messages       Message[]
+
+    @@unique([user1Id, user2Id, listingId]) // Each pair of users can have one conversation per listing
+    @@index([user1Id])
+    @@index([user2Id])
+    @@index([listingId])
+}
+
+// Individual message in a conversation
+model Message {
+    id             String       @id @default(cuid())
+    content        String       @db.Text
+
+    conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    conversationId String
+
+    sender         User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+    senderId       String
+
+    isRead         Boolean      @default(false)
+
+    createdAt      DateTime     @default(now())
+
+    @@index([conversationId])
+    @@index([senderId])
 }
