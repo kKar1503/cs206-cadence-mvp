@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart } from "lucide-react";
+import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -29,6 +29,9 @@ interface Listing {
   authenticityScore: number | null;
   verificationSource: string | null;
   views: number;
+  priceLabel: string | null;
+  pricePercentage: number | null;
+  priceDataUpdated: string | null;
   seller: {
     name: string | null;
   };
@@ -62,6 +65,39 @@ export default function ListingsPage() {
       HEAVILY_USED: "Has obvious signs of use or defects.",
     };
     return descriptions[condition] ?? "";
+  };
+
+  const getPriceLabelInfo = (priceLabel: string | null) => {
+    if (!priceLabel) return null;
+
+    switch (priceLabel) {
+      case "UNDERPRICED":
+        return {
+          icon: TrendingDown,
+          color: "text-green-600",
+          bgColor: "bg-green-50",
+          borderColor: "border-green-200",
+          label: "Great Deal",
+        };
+      case "OVERPRICED":
+        return {
+          icon: TrendingUp,
+          color: "text-red-600",
+          bgColor: "bg-red-50",
+          borderColor: "border-red-200",
+          label: "Above Market",
+        };
+      case "FAIR":
+        return {
+          icon: Minus,
+          color: "text-yellow-600",
+          bgColor: "bg-yellow-50",
+          borderColor: "border-yellow-200",
+          label: "Fair Price",
+        };
+      default:
+        return null;
+    }
   };
 
   const getFirstImage = (listing: Listing): string => {
@@ -464,6 +500,45 @@ export default function ListingsPage() {
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-primary">${listing.price.toFixed(2)}</p>
+                              {listing.priceLabel && listing.pricePercentage && (() => {
+                                const priceInfo = getPriceLabelInfo(listing.priceLabel);
+                                if (!priceInfo) return null;
+                                const Icon = priceInfo.icon;
+                                const formattedDate = listing.priceDataUpdated
+                                  ? new Date(listing.priceDataUpdated).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric'
+                                    })
+                                  : null;
+                                return (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className={`mt-1 inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium cursor-help ${priceInfo.bgColor} ${priceInfo.color} ${priceInfo.borderColor}`}>
+                                        <Icon className="h-3 w-3" />
+                                        <span>{listing.pricePercentage.toFixed(1)}%</span>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="left">
+                                      <div className="max-w-xs">
+                                        <p className="font-semibold">{priceInfo.label}</p>
+                                        <p className="text-xs mt-1">
+                                          {listing.priceLabel === "UNDERPRICED"
+                                            ? `${listing.pricePercentage.toFixed(1)}% below market average`
+                                            : listing.priceLabel === "OVERPRICED"
+                                            ? `${listing.pricePercentage.toFixed(1)}% above market average`
+                                            : `${listing.pricePercentage.toFixed(1)}% within market average`}
+                                        </p>
+                                        {formattedDate && (
+                                          <p className="text-xs mt-1 text-muted-foreground">
+                                            Data updated: {formattedDate}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })()}
                             </div>
                           </div>
 
