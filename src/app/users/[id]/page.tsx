@@ -2,13 +2,20 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Star, AlertCircle, ShieldCheck, Eye, ChevronRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Star, AlertCircle, ShieldCheck, Eye, ChevronRight,
+  Pencil, Check, X, KeyRound, Loader2,
+} from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -95,13 +102,29 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md
 export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { data: session } = useSession();
+  const isOwnProfile = session?.user?.id === id;
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<SellerStats | null>(null);
-  const [activeTab, setActiveTab] = useState<"listings" | "reviews">("listings");
+  const [activeTab, setActiveTab] = useState<"listings" | "reviews" | "settings">("listings");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Edit name state
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState("");
+  const [nameLoading, setNameLoading] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -118,6 +141,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
         const profileData = await profileRes.json() as UserProfile;
         setProfile(profileData);
+        setNameValue(profileData.name ?? "");
 
         if (reviewsRes.ok) {
           const reviewData = await reviewsRes.json() as { reviews: Review[]; stats: SellerStats };
@@ -132,6 +156,72 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     };
     void fetchAll();
   }, [id]);
+
+  const handleSaveName = async () => {
+    if (!profile) return;
+    setNameLoading(true);
+    setNameError(null);
+    try {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nameValue }),
+      });
+      const data = await res.json() as { name?: string; error?: string };
+      if (!res.ok) {
+        setNameError(data.error ?? "Failed to update name.");
+        return;
+      }
+      setProfile((prev) => prev ? { ...prev, name: data.name ?? prev.name } : prev);
+      setEditingName(false);
+    } catch {
+      setNameError("Failed to update name.");
+    } finally {
+      setNameLoading(false);
+    }
+  };
+
+  const handleCancelName = () => {
+    setNameValue(profile?.name ?? "");
+    setNameError(null);
+    setEditingName(false);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await res.json() as { error?: string };
+      if (!res.ok) {
+        setPasswordError(data.error ?? "Failed to change password.");
+        return;
+      }
+      setPasswordSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch {
+      setPasswordError("Failed to change password.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -152,9 +242,12 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   }
 
   const joinYear = new Date(profile.createdAt).getFullYear();
-  const currentYear = new Date().getFullYear();
-  const yearsOnPlatform = currentYear - joinYear;
+  const yearsOnPlatform = new Date().getFullYear() - joinYear;
   const initial = (profile.name ?? "A").charAt(0).toUpperCase();
+
+  const tabs = isOwnProfile
+    ? ["listings", "reviews", "settings"] as const
+    : ["listings", "reviews"] as const;
 
   return (
     <div className="min-h-screen bg-background">
@@ -173,7 +266,48 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
             {/* Name + stats */}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold">{profile.name ?? "Anonymous"}</h1>
+              {/* Name with inline edit for own profile */}
+              {isOwnProfile && editingName ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={nameValue}
+                    onChange={(e) => setNameValue(e.target.value)}
+                    className="h-8 w-48 text-sm font-bold"
+                    maxLength={50}
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void handleSaveName();
+                      if (e.key === "Escape") handleCancelName();
+                    }}
+                  />
+                  <button
+                    onClick={() => void handleSaveName()}
+                    disabled={nameLoading}
+                    className="text-primary hover:opacity-70 transition-opacity"
+                    aria-label="Save name"
+                  >
+                    {nameLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  </button>
+                  <button onClick={handleCancelName} className="text-muted-foreground hover:opacity-70 transition-opacity" aria-label="Cancel">
+                    <X className="h-4 w-4" />
+                  </button>
+                  {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-bold">{profile.name ?? "Anonymous"}</h1>
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => setEditingName(true)}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Edit name"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                 {stats && stats.totalReviews > 0 && (
                   <button
@@ -190,12 +324,19 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                 </span>
               </div>
             </div>
+
+            {/* Own profile badge */}
+            {isOwnProfile && (
+              <Badge variant="secondary" className="shrink-0 self-start sm:self-center">
+                Your profile
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* ── Tabs ── */}
         <div className="mt-6 flex border-b">
-          {(["listings", "reviews"] as const).map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -221,139 +362,230 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
 
           {/* LISTINGS TAB */}
           {activeTab === "listings" && (
-            <>
-              {profile.listings.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No active listings.</p>
-              ) : (
-                <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {profile.listings.map((listing) => (
-                    <Link key={listing.id} href={`/listings/${listing.id}`}>
-                      <div className="group cursor-pointer overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md">
-                        {/* Image */}
-                        <div className="relative aspect-square overflow-hidden bg-muted">
-                          <Image
-                            src={getFirstImage(listing.images, listing.imageUrl)}
-                            alt={listing.title}
-                            fill
-                            className="object-cover transition-transform group-hover:scale-105"
-                          />
-                          {listing.verifiedByOfficial && (
-                            <div className="absolute right-2 top-2 rounded-full bg-primary p-1">
-                              <ShieldCheck className="h-3.5 w-3.5 text-primary-foreground" />
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Info */}
-                        <div className="p-3">
-                          <p className="line-clamp-1 text-sm font-medium">{listing.title}</p>
-                          <p className="line-clamp-1 text-xs text-muted-foreground">{listing.artist}</p>
-                          <p className="mt-1.5 font-bold text-primary">${listing.price.toFixed(2)}</p>
-                          <div className="mt-1.5 flex items-center justify-between">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="text-xs text-muted-foreground cursor-help">
-                                  {getConditionLabel(listing.condition)}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="max-w-xs">{getConditionDescription(listing.condition)}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Eye className="h-3 w-3" />
-                              <span>{listing.views}</span>
-                            </div>
+            profile.listings.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active listings.</p>
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {profile.listings.map((listing) => (
+                  <Link key={listing.id} href={`/listings/${listing.id}`}>
+                    <div className="group cursor-pointer overflow-hidden rounded-xl border bg-card transition-all hover:shadow-md">
+                      <div className="relative aspect-square overflow-hidden bg-muted">
+                        <Image
+                          src={getFirstImage(listing.images, listing.imageUrl)}
+                          alt={listing.title}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                        />
+                        {listing.verifiedByOfficial && (
+                          <div className="absolute right-2 top-2 rounded-full bg-primary p-1">
+                            <ShieldCheck className="h-3.5 w-3.5 text-primary-foreground" />
                           </div>
-                          <Badge variant="secondary" className="mt-2 text-xs">
-                            {getTypeLabel(listing.type)}
-                          </Badge>
-                        </div>
+                        )}
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </>
+                      <div className="p-3">
+                        <p className="line-clamp-1 text-sm font-medium">{listing.title}</p>
+                        <p className="line-clamp-1 text-xs text-muted-foreground">{listing.artist}</p>
+                        <p className="mt-1.5 font-bold text-primary">${listing.price.toFixed(2)}</p>
+                        <div className="mt-1.5 flex items-center justify-between">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-xs text-muted-foreground cursor-help">
+                                {getConditionLabel(listing.condition)}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs">{getConditionDescription(listing.condition)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Eye className="h-3 w-3" />
+                            <span>{listing.views}</span>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="mt-2 text-xs">
+                          {getTypeLabel(listing.type)}
+                        </Badge>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )
           )}
 
           {/* REVIEWS TAB */}
           {activeTab === "reviews" && (
-            <>
-              {reviews.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No reviews yet.</p>
-              ) : (
-                <>
-                  {/* Aggregate header */}
-                  {stats && (
-                    <div className="mb-8 flex items-center gap-4">
-                      <div className="text-center">
-                        <p className="text-4xl font-bold">{stats.averageRating.toFixed(2)}</p>
-                        <StarRating rating={Math.round(stats.averageRating)} size="md" />
-                        <p className="mt-1 text-sm text-muted-foreground">({stats.totalReviews} reviews)</p>
-                      </div>
-                      <Separator orientation="vertical" className="h-16" />
-                      <div className="flex-1 space-y-1.5">
-                        {stats.ratingBreakdown.map(({ star, count }) => {
-                          const pct = stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0;
-                          return (
-                            <div key={star} className="flex items-center gap-2 text-xs">
-                              <span className="w-3 text-right text-muted-foreground">{star}</span>
-                              <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
-                              <div className="flex-1 h-1.5 max-w-48 rounded-full bg-muted overflow-hidden">
-                                <div className="h-full rounded-full bg-amber-400" style={{ width: `${pct}%` }} />
-                              </div>
-                              <span className="text-muted-foreground">{count}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+            reviews.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No reviews yet.</p>
+            ) : (
+              <>
+                {stats && (
+                  <div className="mb-8 flex items-center gap-4">
+                    <div className="text-center">
+                      <p className="text-4xl font-bold">{stats.averageRating.toFixed(2)}</p>
+                      <StarRating rating={Math.round(stats.averageRating)} size="md" />
+                      <p className="mt-1 text-sm text-muted-foreground">({stats.totalReviews} reviews)</p>
                     </div>
+                    <Separator orientation="vertical" className="h-16" />
+                    <div className="flex-1 space-y-1.5">
+                      {stats.ratingBreakdown.map(({ star, count }) => {
+                        const pct = stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0;
+                        return (
+                          <div key={star} className="flex items-center gap-2 text-xs">
+                            <span className="w-3 text-right text-muted-foreground">{star}</span>
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" />
+                            <div className="flex-1 h-1.5 max-w-48 rounded-full bg-muted overflow-hidden">
+                              <div className="h-full rounded-full bg-amber-400" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="text-muted-foreground">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <div className="space-y-6 max-w-2xl">
+                  {reviews.map((review, i) => (
+                    <div key={review.id}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold">
+                          {(review.reviewer.name ?? "A").charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-sm">{review.reviewer.name ?? "Anonymous"}</span>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(review.createdAt).toLocaleDateString("en-SG", {
+                            day: "numeric", month: "short", year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                      <StarRating rating={review.rating} />
+                      <p className="mt-2 text-sm leading-relaxed">{review.comment}</p>
+                      <Link
+                        href={`/listings/${review.listing.id}`}
+                        className="mt-3 flex items-center gap-3 rounded-lg border p-3 hover:bg-muted transition-colors w-full"
+                      >
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
+                          <Image
+                            src={getFirstImage(review.listing.images, review.listing.imageUrl)}
+                            alt={review.listing.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{review.listing.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{review.listing.artist}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
+                      </Link>
+                      {i < reviews.length - 1 && <Separator className="mt-6" />}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )
+          )}
+
+          {/* SETTINGS TAB — own profile only */}
+          {activeTab === "settings" && isOwnProfile && (
+            <div className="max-w-lg space-y-6">
+
+              {/* Account info (read-only) */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Account</CardTitle>
+                  <CardDescription>Your account information</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Email</Label>
+                    <p className="text-sm mt-0.5">{session?.user?.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Display name</Label>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-sm">{profile.name ?? "—"}</p>
+                      <button
+                        onClick={() => {
+                          setEditingName(true);
+                          setActiveTab("listings");
+                          // Small timeout so tab switch renders first
+                          setTimeout(() => setActiveTab("settings"), 0);
+                        }}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Edit in header
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Member since</Label>
+                    <p className="text-sm mt-0.5">{new Date(profile.createdAt).toLocaleDateString("en-SG", { day: "numeric", month: "long", year: "numeric" })}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Change password */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <KeyRound className="h-4 w-4" />
+                    Change Password
+                  </CardTitle>
+                  <CardDescription>Update your password. You&apos;ll need your current password to confirm.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="current-password">Current password</Label>
+                    <Input
+                      id="current-password"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      autoComplete="current-password"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-password">New password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="confirm-password">Confirm new password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
+
+                  {passwordError && (
+                    <p className="text-sm text-destructive">{passwordError}</p>
+                  )}
+                  {passwordSuccess && (
+                    <p className="text-sm text-green-600">Password changed successfully.</p>
                   )}
 
-                  {/* Review list */}
-                  <div className="space-y-6 max-w-2xl">
-                    {reviews.map((review, i) => (
-                      <div key={review.id}>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold">
-                            {(review.reviewer.name ?? "A").charAt(0).toUpperCase()}
-                          </div>
-                          <span className="font-medium text-sm">{review.reviewer.name ?? "Anonymous"}</span>
-                          <span className="text-muted-foreground">·</span>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString("en-SG", {
-                              day: "numeric", month: "short", year: "numeric",
-                            })}
-                          </span>
-                        </div>
-                        <StarRating rating={review.rating} />
-                        <p className="mt-2 text-sm leading-relaxed">{review.comment}</p>
-                        <Link
-                          href={`/listings/${review.listing.id}`}
-                          className="mt-3 flex items-center gap-3 rounded-lg border p-3 hover:bg-muted transition-colors w-full"
-                        >
-                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
-                            <Image
-                              src={getFirstImage(review.listing.images, review.listing.imageUrl)}
-                              alt={review.listing.title}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{review.listing.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">{review.listing.artist}</p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto shrink-0" />
-                        </Link>
-                        {i < reviews.length - 1 && <Separator className="mt-6" />}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
+                  <Button
+                    onClick={() => void handleChangePassword()}
+                    disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
+                    className="w-full"
+                  >
+                    {passwordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Update Password
+                  </Button>
+                </CardContent>
+              </Card>
+
+            </div>
           )}
 
         </div>
