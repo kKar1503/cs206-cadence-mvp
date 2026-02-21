@@ -84,6 +84,9 @@ async function main() {
         sellerId: users[0]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Abbey+Road"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Abbey+Road",
+        priceLabel: "UNDERPRICED",
+        pricePercentage: 11.5,
+        priceDataUpdated: new Date("2025-01-25"),
       },
     }),
     prisma.listing.create({
@@ -104,6 +107,9 @@ async function main() {
         sellerId: users[0]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Kind+of+Blue"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Kind+of+Blue",
+        priceLabel: "FAIR",
+        pricePercentage: 2.5,
+        priceDataUpdated: new Date("2025-01-15"),
       },
     }),
 
@@ -125,6 +131,9 @@ async function main() {
         sellerId: users[1]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Rumours"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Rumours",
+        priceLabel: "UNDERPRICED",
+        pricePercentage: 18.3,
+        priceDataUpdated: new Date("2025-01-20"),
       },
     }),
     prisma.listing.create({
@@ -146,6 +155,9 @@ async function main() {
         sellerId: users[1]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Dark+Side+Moon"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Dark+Side+Moon",
+        priceLabel: "OVERPRICED",
+        pricePercentage: 22.7,
+        priceDataUpdated: new Date("2025-01-18"),
       },
     }),
 
@@ -167,6 +179,9 @@ async function main() {
         sellerId: users[2]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Purple+Rain"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Purple+Rain",
+        priceLabel: "FAIR",
+        pricePercentage: 4.2,
+        priceDataUpdated: new Date("2025-01-22"),
       },
     }),
     prisma.listing.create({
@@ -186,6 +201,9 @@ async function main() {
         sellerId: users[2]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Thriller"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Thriller",
+        priceLabel: "UNDERPRICED",
+        pricePercentage: 12.8,
+        priceDataUpdated: new Date("2025-01-19"),
       },
     }),
 
@@ -209,6 +227,9 @@ async function main() {
         sellerId: users[3]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Blue"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Blue",
+        priceLabel: "FAIR",
+        pricePercentage: 3.1,
+        priceDataUpdated: new Date("2025-01-17"),
       },
     }),
     prisma.listing.create({
@@ -228,6 +249,9 @@ async function main() {
         sellerId: users[3]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Velvet+Underground"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Velvet+Underground",
+        priceLabel: "OVERPRICED",
+        pricePercentage: 35.4,
+        priceDataUpdated: new Date("2025-01-14"),
       },
     }),
     prisma.listing.create({
@@ -247,6 +271,9 @@ async function main() {
         sellerId: users[3]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Nevermind"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Nevermind",
+        priceLabel: "UNDERPRICED",
+        pricePercentage: 8.6,
+        priceDataUpdated: new Date("2025-01-21"),
       },
     }),
 
@@ -269,6 +296,9 @@ async function main() {
         sellerId: users[4]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Whats+Going+On"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Whats+Going+On",
+        priceLabel: "FAIR",
+        pricePercentage: 1.9,
+        priceDataUpdated: new Date("2025-01-23"),
       },
     }),
     prisma.listing.create({
@@ -288,6 +318,9 @@ async function main() {
         sellerId: users[4]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=OK+Computer"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=OK+Computer",
+        priceLabel: "UNDERPRICED",
+        pricePercentage: 15.7,
+        priceDataUpdated: new Date("2025-01-16"),
       },
     }),
     prisma.listing.create({
@@ -308,6 +341,9 @@ async function main() {
         sellerId: users[4]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Random+Access"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Random+Access",
+        priceLabel: "OVERPRICED",
+        pricePercentage: 28.2,
+        priceDataUpdated: new Date("2025-01-12"),
       },
     }),
 
@@ -328,6 +364,9 @@ async function main() {
         sellerId: users[4]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Blonde+on+Blonde"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Blonde+on+Blonde",
+        priceLabel: "UNDERPRICED",
+        pricePercentage: 9.3,
+        priceDataUpdated: new Date("2025-01-24"),
       },
     }),
 
@@ -349,6 +388,9 @@ async function main() {
         sellerId: users[0]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=In+Rainbows+CD"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=In+Rainbows+CD",
+        priceLabel: "FAIR",
+        pricePercentage: 5.2,
+        priceDataUpdated: new Date("2025-01-13"),
       },
     }),
     prisma.listing.create({
@@ -366,6 +408,9 @@ async function main() {
         sellerId: users[2]!.id,
         images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=Beatles+Shirt"]),
         imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=Beatles+Shirt",
+        priceLabel: "OVERPRICED",
+        pricePercentage: 18.9,
+        priceDataUpdated: new Date("2025-01-11"),
       },
     }),
   ]);
