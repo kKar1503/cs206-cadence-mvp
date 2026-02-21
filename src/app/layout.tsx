@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { NavHeader } from "@/components/nav-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { FloatingChat } from "@/components/FloatingChat";
 
 export const metadata: Metadata = {
   title: "Cadence - AI-Driven Music Marketplace Intelligence",
@@ -27,6 +28,7 @@ export default function RootLayout({
           <TooltipProvider>
             <NavHeader />
             {children}
+            <FloatingChat />
           </TooltipProvider>
         </Providers>
       </body>
