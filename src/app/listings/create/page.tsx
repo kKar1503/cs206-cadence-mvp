@@ -195,8 +195,8 @@ export default function CreateListingPage() {
         throw new Error(data.error ?? "Failed to create listing");
       }
 
-      // Redirect to listings page
-      router.push("/listings");
+      // Redirect to success page with listingId
+      router.push(`/listings/create/success?listingId=${data.listing?.id ?? ""}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setIsSubmitting(false);
