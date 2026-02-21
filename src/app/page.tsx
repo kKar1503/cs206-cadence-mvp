@@ -1,7 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Disc3, ShieldCheck, Search, Sparkles, Package, CheckCircle2, BarChart3 } from "lucide-react";
+import { ShieldCheck, Search, Sparkles, Package, CheckCircle2, BarChart3 } from "lucide-react";
 import { StaggeredGrid } from "@/components/ui/fade-in-section";
 
 export default function HomePage() {
@@ -11,11 +12,15 @@ export default function HomePage() {
       <section className="relative overflow-hidden bg-gradient-to-b from-primary/10 via-primary/5 to-background">
         <div className="container mx-auto px-4 py-24 sm:py-32 lg:py-40">
           <div className="mx-auto max-w-5xl text-center">
-            <div className="mb-6 flex items-center justify-center gap-3">
-              <Disc3 className="h-14 w-14 text-primary sm:h-16 sm:w-16" />
-              <h1 className="text-5xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-                Cadence
-              </h1>
+            <div className="mb-6 flex justify-center">
+              <Image
+                src="/cadence-logo.png"
+                alt="Cadence - The Music Marketplace"
+                width={400}
+                height={160}
+                className="h-28 w-auto sm:h-32 lg:h-36"
+                priority
+              />
             </div>
             <h2 className="mb-6 text-3xl font-bold leading-tight text-foreground sm:text-4xl lg:text-5xl">
               Where every record comes with peace of mind
@@ -356,9 +361,14 @@ export default function HomePage() {
       <footer className="border-t bg-muted/30 py-12">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-6xl">
-            <div className="mb-8 flex items-center justify-center gap-3">
-              <Disc3 className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold">Cadence</span>
+            <div className="mb-8 flex justify-center">
+              <Image
+                src="/cadence-logo.png"
+                alt="Cadence"
+                width={180}
+                height={72}
+                className="h-10 w-auto"
+              />
             </div>
             <p className="mb-8 text-center text-sm text-muted-foreground">
               The AI-verified marketplace for vinyl collectors. Buy and sell with confidence.

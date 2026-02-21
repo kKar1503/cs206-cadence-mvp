@@ -1,13 +1,20 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Disc3, Home, Search } from "lucide-react";
+import { Home, Search } from "lucide-react";
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary/5 to-background px-4">
       <div className="text-center">
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <Disc3 className="h-16 w-16 text-primary" />
+        <div className="mb-8 flex justify-center">
+          <Image
+            src="/cadence-logo.png"
+            alt="Cadence"
+            width={280}
+            height={112}
+            className="h-20 w-auto sm:h-24"
+          />
         </div>
 
         <h1 className="mb-4 text-6xl font-bold text-foreground">404</h1>

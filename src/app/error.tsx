@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Disc3, Home, RefreshCw } from "lucide-react";
+import { Home, RefreshCw } from "lucide-react";
 
 export default function Error({
   error,
@@ -20,8 +21,14 @@ export default function Error({
   return (
     <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-gradient-to-b from-destructive/5 to-background px-4 py-12">
       <div className="text-center">
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <Disc3 className="h-16 w-16 text-primary" />
+        <div className="mb-8 flex justify-center">
+          <Image
+            src="/cadence-logo.png"
+            alt="Cadence"
+            width={280}
+            height={112}
+            className="h-20 w-auto sm:h-24"
+          />
         </div>
 
         <h1 className="mb-4 text-6xl font-bold text-foreground">Oops!</h1>
