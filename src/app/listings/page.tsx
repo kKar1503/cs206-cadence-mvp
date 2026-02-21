@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Search, ShieldCheck, Eye, SlidersHorizontal } from "lucide-react";
+import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -25,6 +27,7 @@ interface Listing {
   isVerified: boolean;
   verifiedByOfficial: boolean;
   authenticityScore: number | null;
+  verificationSource: string | null;
   views: number;
   seller: {
     name: string | null;
@@ -32,12 +35,16 @@ interface Listing {
 }
 
 export default function ListingsPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
+  const [togglingFavoriteId, setTogglingFavoriteId] = useState<string | null>(null);
 
   const listingTypes = ["VINYL", "CD", "CASSETTE", "MERCH", "EQUIPMENT"];
   const conditions = ["BRAND_NEW", "LIKE_NEW", "LIGHTLY_USED", "WELL_USED", "HEAVILY_USED"];
@@ -69,6 +76,23 @@ export default function ListingsPage() {
   useEffect(() => {
     void fetchListings();
   }, []);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const res = await fetch("/api/favorites");
+        if (res.ok) {
+          const favorites = await res.json() as Array<{ listingId: string }>;
+          setFavoritedIds(new Set(favorites.map((f) => f.listingId)));
+        }
+      } catch (err) {
+        console.error("Failed to fetch favorites:", err);
+      }
+    };
+    void fetchFavorites();
+  }, [session]);
 
   const fetchListings = async () => {
     try {
@@ -112,6 +136,47 @@ export default function ListingsPage() {
     setSelectedConditions((prev) =>
       prev.includes(condition) ? prev.filter((c) => c !== condition) : [...prev, condition]
     );
+  };
+
+  const toggleFavorite = async (e: React.MouseEvent, listingId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!session?.user?.id) {
+      router.push("/auth/signin");
+      return;
+    }
+
+    setTogglingFavoriteId(listingId);
+    const isFavorited = favoritedIds.has(listingId);
+
+    try {
+      if (isFavorited) {
+        const res = await fetch(`/api/favorites?listingId=${listingId}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          setFavoritedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(listingId);
+            return next;
+          });
+        }
+      } else {
+        const res = await fetch("/api/favorites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingId }),
+        });
+        if (res.ok) {
+          setFavoritedIds((prev) => new Set([...prev, listingId]));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+    } finally {
+      setTogglingFavoriteId(null);
+    }
   };
 
   return (
@@ -355,10 +420,39 @@ export default function ListingsPage() {
                               fill
                               className="object-cover transition-transform group-hover:scale-105"
                             />
+                            {/* Favorite button */}
+                            <button
+                              onClick={(e) => toggleFavorite(e, listing.id)}
+                              disabled={togglingFavoriteId === listing.id}
+                              className="absolute right-2 top-2 z-10 rounded-full bg-background/80 p-2 shadow-md transition-all hover:bg-background hover:scale-110 disabled:opacity-50"
+                              aria-label={favoritedIds.has(listing.id) ? "Remove from favorites" : "Add to favorites"}
+                            >
+                              <Heart
+                                className={`h-4 w-4 transition-colors ${
+                                  favoritedIds.has(listing.id)
+                                    ? "fill-red-500 text-red-500"
+                                    : "text-muted-foreground hover:text-red-500"
+                                }`}
+                              />
+                            </button>
                             {listing.verifiedByOfficial && (
-                              <div className="absolute right-2 top-2 rounded-full bg-primary p-1.5">
-                                <ShieldCheck className="h-4 w-4 text-primary-foreground" />
-                              </div>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="absolute right-2 top-12 rounded-full bg-primary p-1.5 cursor-help">
+                                    <ShieldCheck className="h-4 w-4 text-primary-foreground" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">
+                                  <div className="max-w-xs">
+                                    <p className="font-semibold">Officially Verified</p>
+                                    {listing.verificationSource ? (
+                                      <p className="text-xs mt-1">Verified by {listing.verificationSource}</p>
+                                    ) : (
+                                      <p className="text-xs mt-1">Verified by official sources</p>
+                                    )}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
                             )}
                           </div>
                         </CardHeader>
