@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,8 @@ import {
   ArrowLeft,
   AlertCircle,
   Star,
+  Edit,
+  Heart,
 } from "lucide-react";
 
 interface Seller {
@@ -48,6 +51,7 @@ interface Listing {
   isVerified: boolean;
   verifiedByOfficial: boolean;
   authenticityScore: number | null;
+  verificationSource: string | null;
   isSold: boolean;
   views: number;
   createdAt: string;
@@ -138,6 +142,7 @@ function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md
 export default function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [related, setRelated] = useState<RelatedListing[]>([]);
@@ -147,6 +152,8 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [allImages, setAllImages] = useState<string[]>([]);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isFavoriting, setIsFavoriting] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -180,6 +187,58 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
     };
     void fetchAll();
   }, [id]);
+
+  // Check if listing is favorited
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const res = await fetch("/api/favorites");
+        if (res.ok) {
+          const favorites = await res.json() as Array<{ listingId: string }>;
+          setIsFavorited(favorites.some((f) => f.listingId === id));
+        }
+      } catch (err) {
+        console.error("Failed to check favorite status:", err);
+      }
+    };
+    void checkFavorite();
+  }, [id, session]);
+
+  const toggleFavorite = async () => {
+    if (!session?.user?.id) {
+      router.push("/auth/signin");
+      return;
+    }
+
+    setIsFavoriting(true);
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        const res = await fetch(`/api/favorites?listingId=${id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          setIsFavorited(false);
+        }
+      } else {
+        // Add to favorites
+        const res = await fetch("/api/favorites", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listingId: id }),
+        });
+        if (res.ok) {
+          setIsFavorited(true);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+    } finally {
+      setIsFavoriting(false);
+    }
+  };
 
   const prevImage = () => setActiveImageIndex((i) => (i - 1 + allImages.length) % allImages.length);
   const nextImage = () => setActiveImageIndex((i) => (i + 1) % allImages.length);
@@ -272,19 +331,49 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
+            {/* Official Verification */}
+            {listing.verifiedByOfficial && listing.verificationSource && (
+              <Card className="border-blue-500/50 bg-blue-50 dark:bg-blue-950/30">
+                <CardContent className="flex items-start gap-3 p-4">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                      Officially Verified
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Verified by <strong>{listing.verificationSource}</strong>
+                    </p>
+                    <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                      Highest authenticity assurance
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* AI Authenticity */}
-            {listing.isVerified && (
+            {listing.isVerified && listing.authenticityScore !== null && (
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="flex items-start gap-3 p-4">
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                   <div>
                     <p className="text-sm font-semibold text-primary">AI Verified Authentic</p>
-                    {listing.authenticityScore !== null && (
-                      <p className="text-sm text-muted-foreground">{listing.authenticityScore.toFixed(1)}% authenticity score</p>
-                    )}
-                    {listing.verifiedByOfficial && (
-                      <p className="mt-1 text-xs text-primary">Also verified by official sources</p>
-                    )}
+                    <p className="text-sm text-muted-foreground">{listing.authenticityScore.toFixed(1)}% authenticity score</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* No AI Verification */}
+            {!listing.isVerified && listing.authenticityScore === null && (
+              <Card className="border-gray-300 bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700">
+                <CardContent className="flex items-start gap-3 p-4">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Not AI Verified</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      This listing has not been verified by our AI authenticity system
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -347,21 +436,56 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
             <Separator />
 
             {/* Action buttons */}
-            {!listing.isSold ? (
+            {session?.user?.id === listing.seller.id ? (
+              // Owner view - Edit listing button
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" className="flex-1 gap-2" onClick={() => router.push(`/checkout/${listing.id}`)}>
-                  <ShoppingCart className="h-5 w-5" />
-                  Buy Now — ${listing.price.toFixed(2)}
+                <Button size="lg" className="flex-1 gap-2" onClick={() => router.push(`/listings/${listing.id}/edit`)}>
+                  <Edit className="h-5 w-5" />
+                  Edit Listing
                 </Button>
-                <Button size="lg" variant="outline" className="flex-1 gap-2"
-                  onClick={() => router.push(`/chat/${listing.seller.id}?listing=${listing.id}`)}>
-                  <MessageCircle className="h-5 w-5" />
-                  Chat with Seller
+              </div>
+            ) : !listing.isSold ? (
+              // Buyer view - Buy, Chat, and Favorite buttons
+              <div className="space-y-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button size="lg" className="flex-1 gap-2" onClick={() => router.push(`/checkout/${listing.id}`)}>
+                    <ShoppingCart className="h-5 w-5" />
+                    Buy Now — ${listing.price.toFixed(2)}
+                  </Button>
+                  <Button size="lg" variant="outline" className="flex-1 gap-2"
+                    onClick={() => router.push(`/chat/${listing.seller.id}?listing=${listing.id}`)}>
+                    <MessageCircle className="h-5 w-5" />
+                    Chat with Seller
+                  </Button>
+                </div>
+                <Button
+                  size="lg"
+                  variant={isFavorited ? "default" : "outline"}
+                  className="w-full gap-2"
+                  onClick={toggleFavorite}
+                  disabled={isFavoriting}
+                >
+                  <Heart className={`h-5 w-5 ${isFavorited ? "fill-current" : ""}`} />
+                  {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
                 </Button>
               </div>
             ) : (
-              <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
-                This item has been sold.
+              <div className="space-y-3">
+                <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
+                  This item has been sold.
+                </div>
+                {session?.user?.id && (
+                  <Button
+                    size="lg"
+                    variant={isFavorited ? "default" : "outline"}
+                    className="w-full gap-2"
+                    onClick={toggleFavorite}
+                    disabled={isFavoriting}
+                  >
+                    <Heart className={`h-5 w-5 ${isFavorited ? "fill-current" : ""}`} />
+                    {isFavorited ? "Remove from Favorites" : "Add to Favorites"}
+                  </Button>
+                )}
               </div>
             )}
 
