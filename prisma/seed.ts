@@ -8,6 +8,7 @@ async function main() {
 
   // Clear existing data (order matters due to FK constraints)
   await prisma.review.deleteMany();
+  await prisma.platformPrice.deleteMany();
   await prisma.listing.deleteMany();
   await prisma.user.deleteMany();
 
@@ -438,6 +439,179 @@ async function main() {
   ]);
 
   console.log(`Created ${listings.length} listings`);
+
+  // Create platform prices for price comparison
+  const platformPrices = await Promise.all([
+    // Abbey Road (listings[0]) - $89.99 - UNDERPRICED
+    prisma.platformPrice.create({
+      data: {
+        platform: "Discogs",
+        minPrice: 95,
+        maxPrice: 135,
+        priceLabel: "Fair",
+        listingId: listings[0]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "eBay",
+        minPrice: 110,
+        maxPrice: 160,
+        priceLabel: "Slightly High",
+        listingId: listings[0]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "Cadence",
+        avgPrice: 89.99,
+        priceLabel: "Optimal",
+        listingId: listings[0]!.id,
+      },
+    }),
+
+    // Kind of Blue (listings[1]) - $125.00 - FAIR
+    prisma.platformPrice.create({
+      data: {
+        platform: "Discogs",
+        minPrice: 120,
+        maxPrice: 180,
+        priceLabel: "Fair",
+        listingId: listings[1]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "eBay",
+        minPrice: 115,
+        maxPrice: 155,
+        priceLabel: "Fair",
+        listingId: listings[1]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "Cadence",
+        avgPrice: 125.00,
+        priceLabel: "Optimal",
+        listingId: listings[1]!.id,
+      },
+    }),
+
+    // Rumours (listings[2]) - $65.50 - UNDERPRICED
+    prisma.platformPrice.create({
+      data: {
+        platform: "Discogs",
+        minPrice: 75,
+        maxPrice: 95,
+        priceLabel: "Fair",
+        listingId: listings[2]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "eBay",
+        minPrice: 80,
+        maxPrice: 110,
+        priceLabel: "Slightly High",
+        listingId: listings[2]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "Cadence",
+        avgPrice: 65.50,
+        priceLabel: "Optimal",
+        listingId: listings[2]!.id,
+      },
+    }),
+
+    // Dark Side of the Moon (listings[3]) - $110.00 - OVERPRICED
+    prisma.platformPrice.create({
+      data: {
+        platform: "Discogs",
+        minPrice: 80,
+        maxPrice: 100,
+        priceLabel: "Fair",
+        listingId: listings[3]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "eBay",
+        minPrice: 85,
+        maxPrice: 95,
+        priceLabel: "Fair",
+        listingId: listings[3]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "Cadence",
+        avgPrice: 110.00,
+        priceLabel: "High",
+        listingId: listings[3]!.id,
+      },
+    }),
+
+    // Purple Rain (listings[4]) - $45.00 - FAIR
+    prisma.platformPrice.create({
+      data: {
+        platform: "Discogs",
+        minPrice: 40,
+        maxPrice: 55,
+        priceLabel: "Fair",
+        listingId: listings[4]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "eBay",
+        minPrice: 42,
+        maxPrice: 50,
+        priceLabel: "Fair",
+        listingId: listings[4]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "Cadence",
+        avgPrice: 45.00,
+        priceLabel: "Optimal",
+        listingId: listings[4]!.id,
+      },
+    }),
+
+    // Thriller (listings[5]) - $38.99 - UNDERPRICED
+    prisma.platformPrice.create({
+      data: {
+        platform: "Discogs",
+        minPrice: 42,
+        maxPrice: 58,
+        priceLabel: "Fair",
+        listingId: listings[5]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "eBay",
+        minPrice: 45,
+        maxPrice: 65,
+        priceLabel: "Slightly High",
+        listingId: listings[5]!.id,
+      },
+    }),
+    prisma.platformPrice.create({
+      data: {
+        platform: "Cadence",
+        avgPrice: 38.99,
+        priceLabel: "Optimal",
+        listingId: listings[5]!.id,
+      },
+    }),
+  ]);
+
+  console.log(`Created ${platformPrices.length} platform price entries`);
 
   // listings[0]  = Abbey Road         (seller: users[0] Admin)
   // listings[1]  = Kind of Blue       (seller: users[0] Admin)

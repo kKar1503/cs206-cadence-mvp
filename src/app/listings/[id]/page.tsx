@@ -39,6 +39,16 @@ interface Seller {
   createdAt: string;
 }
 
+interface PlatformPrice {
+  id: string;
+  platform: string;
+  minPrice: number | null;
+  maxPrice: number | null;
+  avgPrice: number | null;
+  priceLabel: string | null;
+  currency: string;
+}
+
 interface Listing {
   id: string;
   title: string;
@@ -74,6 +84,7 @@ interface Listing {
   conditionNotes: string | null;
   createdAt: string;
   seller: Seller;
+  platformPrices?: PlatformPrice[];
 }
 
 interface RelatedListing {
@@ -210,6 +221,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
   const [isFavoriting, setIsFavoriting] = useState(false);
   const [showAuthenticityDetails, setShowAuthenticityDetails] = useState(false);
   const [showConditionDetails, setShowConditionDetails] = useState(false);
+  const [showPriceDetails, setShowPriceDetails] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -456,8 +468,8 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               <p className="mt-1 text-xl text-muted-foreground">{listing.artist}</p>
               <p className="mt-4 text-4xl font-bold text-primary">${listing.price.toFixed(2)}</p>
 
-              {/* Price Comparison */}
-              {listing.priceLabel && listing.pricePercentage && (() => {
+              {/* Price Comparison Overview */}
+              {!showPriceDetails && listing.priceLabel && listing.pricePercentage && (() => {
                 const priceInfo = getPriceLabelInfo(listing.priceLabel);
                 if (!priceInfo) return null;
                 const Icon = priceInfo.icon;
@@ -496,11 +508,83 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                             Data updated: {formattedDate}
                           </p>
                         )}
+                        {listing.platformPrices && listing.platformPrices.length > 0 && (
+                          <button
+                            onClick={() => setShowPriceDetails(true)}
+                            className="flex items-center gap-2 text-sm text-primary hover:underline font-medium mt-2"
+                          >
+                            View Details
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 );
               })()}
+
+              {/* Price Comparison Details */}
+              {showPriceDetails && listing.platformPrices && listing.platformPrices.length > 0 && (
+                <Card className="mt-3 border-2">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">Cadence Price Overview</h3>
+                      <button
+                        onClick={() => setShowPriceDetails(false)}
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold text-center mb-4">PLATFORM PRICE COMPARISON</h4>
+                      <div className="space-y-3">
+                        {listing.platformPrices.map((platformPrice) => {
+                          const priceRange = platformPrice.minPrice && platformPrice.maxPrice
+                            ? `$${platformPrice.minPrice} - $${platformPrice.maxPrice}`
+                            : platformPrice.avgPrice
+                            ? `$${platformPrice.avgPrice.toFixed(2)}`
+                            : "N/A";
+
+                          const labelColorClass = platformPrice.priceLabel === "Optimal"
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                            : platformPrice.priceLabel === "Fair"
+                            ? "bg-green-100 text-green-800 border-green-300"
+                            : platformPrice.priceLabel === "Slightly High"
+                            ? "bg-orange-100 text-orange-800 border-orange-300"
+                            : "bg-gray-100 text-gray-800 border-gray-300";
+
+                          const isOptimal = platformPrice.priceLabel === "Optimal";
+
+                          return (
+                            <div
+                              key={platformPrice.id}
+                              className={`flex items-center justify-between p-3 rounded-md ${
+                                isOptimal ? "bg-yellow-50 border border-yellow-200" : ""
+                              }`}
+                            >
+                              <div className="font-medium">{platformPrice.platform}</div>
+                              <div className="flex items-center gap-3">
+                                <div className="text-sm font-medium">{priceRange}</div>
+                                {platformPrice.priceLabel && (
+                                  <div
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${labelColorClass}`}
+                                  >
+                                    {isOptimal && <span>★</span>}
+                                    {platformPrice.priceLabel}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* AI Insights Overview */}
               {(listing.authenticityScore ?? listing.conditionScore) && (

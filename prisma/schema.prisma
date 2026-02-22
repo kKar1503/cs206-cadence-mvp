@@ -100,11 +100,32 @@ model Listing {
     orders                Order[]
     favorites             Favorite[]
     conversations         Conversation[]
+    platformPrices        PlatformPrice[]
 
     @@index([title])
     @@index([artist])
     @@index([type])
     @@index([sellerId])
+}
+
+// External platform pricing data for price comparison
+model PlatformPrice {
+    id          String   @id @default(cuid())
+    platform    String   // e.g., "Discogs", "eBay", "Amazon"
+    minPrice    Float?   // Minimum price found on platform
+    maxPrice    Float?   // Maximum price found on platform
+    avgPrice    Float?   // Average price (optional, used for single price points)
+    priceLabel  String?  // "Fair", "Slightly High", "Optimal"
+    currency    String   @default("USD")
+
+    listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    listingId   String
+
+    updatedAt   DateTime @updatedAt
+    createdAt   DateTime @default(now())
+
+    @@index([listingId])
+    @@index([platform])
 }
 
 // A review is left by a buyer (reviewer) about a seller (seller), tied to a specific listing

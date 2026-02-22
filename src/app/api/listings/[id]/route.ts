@@ -22,6 +22,11 @@ export async function GET(
             createdAt: true,
           },
         },
+        platformPrices: {
+          orderBy: {
+            platform: "asc",
+          },
+        },
       },
     });
 
