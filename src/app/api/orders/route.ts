@@ -103,7 +103,7 @@ export async function POST(request: Request) {
         listingId: listing.id,
         sellerId: listing.sellerId,
         amount: listing.price,
-        status: "completed",
+        status: "processing",
       },
       include: {
         listing: {

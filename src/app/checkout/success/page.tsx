@@ -6,7 +6,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Home, Package, ShoppingBag } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2, Home, Package, ShoppingBag, Star } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 type Listing = {
   id: string;
@@ -15,6 +17,10 @@ type Listing = {
   price: number;
   images: string;
   imageUrl: string | null;
+  seller: {
+    id: string;
+    name: string | null;
+  };
 };
 
 const getFirstImage = (listing: Listing): string => {
@@ -28,9 +34,15 @@ const getFirstImage = (listing: Listing): string => {
 
 function SuccessContent() {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const listingId = searchParams.get("listingId");
   const orderNumber = searchParams.get("orderNumber") ?? `ORD-${Date.now().toString().slice(-8)}`;
   const [listing, setListing] = useState<Listing | null>(null);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   useEffect(() => {
     if (!listingId) return;
@@ -48,6 +60,31 @@ function SuccessContent() {
 
     void fetchListing();
   }, [listingId]);
+
+  const handleReviewSubmit = async () => {
+    if (!listing || !session?.user?.id || rating === 0) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/users/${listing.seller.id}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rating,
+          comment: comment.trim() || null,
+          listingId: listing.id,
+        }),
+      });
+
+      if (res.ok) {
+        setReviewSubmitted(true);
+      }
+    } catch (error) {
+      console.error("Error submitting review:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-green-50 to-background dark:from-green-950/20 py-16">
@@ -88,6 +125,72 @@ function SuccessContent() {
                       <p className="text-lg font-semibold mt-2">${listing.price.toFixed(2)}</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Review Section */}
+                <div className="border-t pt-4">
+                  <h2 className="font-semibold mb-3">Rate Your Experience</h2>
+                  {reviewSubmitted ? (
+                    <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-center">
+                      <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                      <p className="font-medium text-green-900 dark:text-green-100">
+                        Thank you for your review!
+                      </p>
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        Your feedback helps improve our community.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          How would you rate {listing.seller.name ?? "this seller"}?
+                        </p>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setRating(star)}
+                              onMouseEnter={() => setHoverRating(star)}
+                              onMouseLeave={() => setHoverRating(0)}
+                              className="transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                            >
+                              <Star
+                                className={`h-8 w-8 ${
+                                  star <= (hoverRating || rating)
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="review-comment" className="text-sm font-medium mb-2 block">
+                          Share your thoughts (optional)
+                        </label>
+                        <Textarea
+                          id="review-comment"
+                          placeholder="Tell us about your experience with this seller..."
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          rows={3}
+                          className="resize-none"
+                        />
+                      </div>
+
+                      <Button
+                        onClick={handleReviewSubmit}
+                        disabled={rating === 0 || isSubmitting}
+                        className="w-full"
+                      >
+                        {isSubmitting ? "Submitting..." : "Submit Review"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t pt-4">

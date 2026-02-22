@@ -67,6 +67,7 @@ interface OpenChat {
   listing: Listing;
   messages: Message[];
   isMinimized: boolean;
+  hasReviewed?: boolean;
 }
 
 export function FloatingChat() {
@@ -197,9 +198,22 @@ export function FloatingChat() {
 
     // Fetch messages for this conversation
     try {
-      const res = await fetch(`/api/conversations/${conversation.id}/messages`);
-      if (res.ok) {
-        const data = await res.json() as { messages: Message[] };
+      const [messagesRes, reviewsRes] = await Promise.all([
+        fetch(`/api/conversations/${conversation.id}/messages`),
+        fetch(`/api/users/${conversation.listing.sellerId}/reviews`),
+      ]);
+
+      if (messagesRes.ok) {
+        const messagesData = await messagesRes.json() as { messages: Message[] };
+
+        // Check if user has already reviewed this seller
+        let hasReviewed = false;
+        if (reviewsRes.ok) {
+          const reviewsData = await reviewsRes.json() as { reviews: Array<{ reviewerId: string; listingId: string }> };
+          hasReviewed = reviewsData.reviews.some(
+            (review) => review.reviewerId === session?.user?.id && review.listingId === conversation.listing.id
+          );
+        }
 
         // Limit to 3 open chats
         const newOpenChats = openChats.slice(-2);
@@ -210,8 +224,9 @@ export function FloatingChat() {
             conversationId: conversation.id,
             otherUser: conversation.otherUser,
             listing: conversation.listing,
-            messages: data.messages,
+            messages: messagesData.messages,
             isMinimized: false,
+            hasReviewed,
           },
         ]);
       }
@@ -372,7 +387,8 @@ export function FloatingChat() {
 
                   {/* Review Button for Buyers */}
                   {chat.listing.isSold &&
-                   chat.listing.sellerId !== session.user.id && (
+                   chat.listing.sellerId !== session.user.id &&
+                   !chat.hasReviewed && (
                     <Link href={`/users/${chat.listing.sellerId}?review=true`} target="_blank">
                       <Button variant="outline" size="sm" className="w-full mt-2 gap-2">
                         <Star className="h-4 w-4" />

@@ -8,7 +8,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, Calendar, DollarSign, User, ShoppingBag } from "lucide-react";
+import { Package, Calendar, DollarSign, User, ShoppingBag, MessageCircle } from "lucide-react";
 
 type Order = {
   id: string;
@@ -118,7 +118,7 @@ export default function OrdersPage() {
                     </div>
                     <Badge
                       variant={
-                        order.status === "completed"
+                        order.status === "processing"
                           ? "default"
                           : order.status === "pending"
                           ? "secondary"
@@ -182,11 +182,25 @@ export default function OrdersPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center">
+                    <div className="flex flex-col gap-2">
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/listings/${order.listing.id}`}>
                           View Details
                         </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => {
+                          const event = new CustomEvent("startNewChat", {
+                            detail: { otherUserId: order.seller.id, listingId: order.listing.id }
+                          });
+                          window.dispatchEvent(event);
+                        }}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Chat
                       </Button>
                     </div>
                   </div>
