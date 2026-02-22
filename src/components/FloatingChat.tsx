@@ -105,14 +105,41 @@ export function FloatingChat() {
           if (res.ok) {
             const conv = await res.json() as { id: string; otherUser: User; listingId: string };
 
-            // Fetch the full conversation with listing details
-            await fetchConversations();
-
-            // Find and open the conversation
-            const fullConv = conversations.find(c => c.id === conv.id);
-            if (fullConv) {
-              await openChat(fullConv);
+            // Fetch the listing details
+            const listingRes = await fetch(`/api/listings/${listingId}`);
+            if (!listingRes.ok) {
+              console.error("Failed to fetch listing");
+              return;
             }
+
+            const listingData = await listingRes.json() as {
+              listing: {
+                id: string;
+                title: string;
+                artist: string;
+                images: string;
+                imageUrl: string | null;
+                isSold: boolean;
+                sellerId: string;
+              }
+            };
+
+            // Create a ConversationSummary object and open it directly
+            const conversationToOpen: ConversationSummary = {
+              id: conv.id,
+              otherUser: conv.otherUser,
+              listing: listingData.listing,
+              lastMessage: null,
+              unreadCount: 0,
+              updatedAt: new Date().toISOString(),
+              listingId: conv.listingId,
+            };
+
+            // Open the chat immediately
+            await openChat(conversationToOpen);
+
+            // Also refresh the conversation list in the background
+            void fetchConversations();
           }
         } catch (error) {
           console.error("Error starting new chat:", error);
