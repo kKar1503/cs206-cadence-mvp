@@ -599,7 +599,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">Authenticity</span>
-                            <span className="font-bold text-lg">{Math.round(listing.authenticityScore)}/100</span>
+                            <span className="font-bold text-lg">{listing.authenticityScore.toFixed(1)}%</span>
                           </div>
                           <div className="h-3 bg-muted rounded-full overflow-hidden">
                             <div
@@ -615,7 +615,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                         <div>
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-medium">Condition</span>
-                            <span className="font-bold text-lg">{Math.round(listing.conditionScore)}/100</span>
+                            <span className="font-bold text-lg">{listing.conditionScore.toFixed(1)}%</span>
                           </div>
                           <div className="h-3 bg-muted rounded-full overflow-hidden">
                             <div
