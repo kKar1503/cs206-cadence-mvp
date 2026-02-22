@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import Link from "next/link";
 import {
   MessageCircle,
   X,
@@ -15,6 +16,8 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  ExternalLink,
+  Star,
 } from "lucide-react";
 
 interface User {
@@ -30,6 +33,8 @@ interface Listing {
   artist: string;
   images: string;
   imageUrl: string | null;
+  isSold: boolean;
+  sellerId: string;
 }
 
 interface Message {
@@ -336,6 +341,47 @@ export function FloatingChat() {
 
             {!chat.isMinimized && (
               <CardContent className="p-0">
+                {/* Listing Info Card */}
+                <div className="p-3 border-b bg-background">
+                  <Link href={`/listings/${chat.listing.id}`} target="_blank">
+                    <div className="flex gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md">
+                        <Image
+                          src={getFirstImage(chat.listing.images, chat.listing.imageUrl)}
+                          alt={chat.listing.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{chat.listing.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{chat.listing.artist}</p>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                        {chat.listing.isSold && (
+                          <Badge variant="secondary" className="mt-1 text-xs">
+                            Sold
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Review Button for Buyers */}
+                  {chat.listing.isSold &&
+                   chat.listing.sellerId !== session.user.id && (
+                    <Link href={`/users/${chat.listing.sellerId}?review=true`} target="_blank">
+                      <Button variant="outline" size="sm" className="w-full mt-2 gap-2">
+                        <Star className="h-4 w-4" />
+                        Leave a Review for Seller
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+
                 {/* Messages */}
                 <div className="h-80 overflow-y-auto p-3 space-y-3 bg-muted/30">
                   {chat.messages.length === 0 ? (

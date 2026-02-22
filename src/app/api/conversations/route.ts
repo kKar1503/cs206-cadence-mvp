@@ -45,6 +45,8 @@ export async function GET() {
             artist: true,
             images: true,
             imageUrl: true,
+            isSold: true,
+            sellerId: true,
           },
         },
         messages: {
