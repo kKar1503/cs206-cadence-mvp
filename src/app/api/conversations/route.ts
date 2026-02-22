@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 
@@ -235,7 +236,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const otherUser = conversation.user1Id === userId ? conversation.user2 : conversation.user1;
+    const otherUser =
+      (conversation.user1Id === userId ? conversation.user2 : conversation.user1) as {
+        id: string;
+        name: string | null;
+        email: string;
+        image: string | null;
+      };
 
     console.log("Conversation created/found:", conversation.id);
     return NextResponse.json({

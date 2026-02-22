@@ -407,7 +407,7 @@ export function FloatingChat() {
                       type="submit"
                       size="icon"
                       disabled={
-                        isSending[chat.conversationId] ||
+                        (isSending[chat.conversationId] ?? false) ||
                         !newMessages[chat.conversationId]?.trim()
                       }
                     >
