@@ -202,6 +202,7 @@ async function main() {
         priceLabel: "UNDERPRICED",
         pricePercentage: 11.5,
         priceDataUpdated: new Date("2025-01-25"),
+        createdAt: new Date("2025-02-22T10:00:00Z"), // Listings with images get recent timestamps
       },
     }),
     prisma.listing.create({
@@ -241,6 +242,7 @@ async function main() {
         priceLabel: "FAIR",
         pricePercentage: 2.5,
         priceDataUpdated: new Date("2025-01-15"),
+        createdAt: new Date("2025-02-22T09:50:00Z"),
       },
     }),
 
@@ -276,6 +278,7 @@ async function main() {
         priceLabel: "UNDERPRICED",
         pricePercentage: 18.3,
         priceDataUpdated: new Date("2025-01-20"),
+        createdAt: new Date("2025-02-22T09:40:00Z"),
       },
     }),
     prisma.listing.create({
@@ -311,6 +314,7 @@ async function main() {
         priceLabel: "OVERPRICED",
         pricePercentage: 22.7,
         priceDataUpdated: new Date("2025-01-18"),
+        createdAt: new Date("2025-02-22T09:30:00Z"),
       },
     }),
 
@@ -346,6 +350,7 @@ async function main() {
         priceLabel: "FAIR",
         pricePercentage: 4.2,
         priceDataUpdated: new Date("2025-01-22"),
+        createdAt: new Date("2025-02-22T09:20:00Z"),
       },
     }),
     prisma.listing.create({
@@ -379,6 +384,7 @@ async function main() {
         priceLabel: "UNDERPRICED",
         pricePercentage: 12.8,
         priceDataUpdated: new Date("2025-01-19"),
+        createdAt: new Date("2025-02-22T09:10:00Z"),
       },
     }),
 
@@ -416,6 +422,7 @@ async function main() {
         priceLabel: "FAIR",
         pricePercentage: 3.1,
         priceDataUpdated: new Date("2025-01-17"),
+        createdAt: new Date("2025-02-15T10:00:00Z"), // Older listings without images
       },
     }),
     prisma.listing.create({
@@ -449,6 +456,7 @@ async function main() {
         priceLabel: "OVERPRICED",
         pricePercentage: 35.4,
         priceDataUpdated: new Date("2025-01-14"),
+        createdAt: new Date("2025-02-14T10:00:00Z"),
       },
     }),
     prisma.listing.create({
@@ -482,6 +490,7 @@ async function main() {
         priceLabel: "UNDERPRICED",
         pricePercentage: 8.6,
         priceDataUpdated: new Date("2025-01-21"),
+        createdAt: new Date("2025-02-13T10:00:00Z"),
       },
     }),
 
@@ -518,6 +527,7 @@ async function main() {
         priceLabel: "FAIR",
         pricePercentage: 1.9,
         priceDataUpdated: new Date("2025-01-23"),
+        createdAt: new Date("2025-02-12T10:00:00Z"),
       },
     }),
     prisma.listing.create({
@@ -551,6 +561,7 @@ async function main() {
         priceLabel: "UNDERPRICED",
         pricePercentage: 15.7,
         priceDataUpdated: new Date("2025-01-16"),
+        createdAt: new Date("2025-02-11T10:00:00Z"),
       },
     }),
     prisma.listing.create({
@@ -585,6 +596,7 @@ async function main() {
         priceLabel: "OVERPRICED",
         pricePercentage: 28.2,
         priceDataUpdated: new Date("2025-01-12"),
+        createdAt: new Date("2025-02-10T10:00:00Z"),
       },
     }),
 
@@ -608,6 +620,7 @@ async function main() {
         priceLabel: "UNDERPRICED",
         pricePercentage: 9.3,
         priceDataUpdated: new Date("2025-01-24"),
+        createdAt: new Date("2025-02-09T10:00:00Z"),
       },
     }),
 
@@ -643,6 +656,7 @@ async function main() {
         priceLabel: "FAIR",
         pricePercentage: 5.2,
         priceDataUpdated: new Date("2025-01-13"),
+        createdAt: new Date("2025-02-08T10:00:00Z"),
       },
     }),
     prisma.listing.create({
@@ -663,6 +677,7 @@ async function main() {
         priceLabel: "OVERPRICED",
         pricePercentage: 18.9,
         priceDataUpdated: new Date("2025-01-11"),
+        createdAt: new Date("2025-02-07T10:00:00Z"),
       },
     }),
   ]);
