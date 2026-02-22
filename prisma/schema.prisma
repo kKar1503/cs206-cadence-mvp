@@ -64,8 +64,23 @@ model Listing {
     // AI verification fields
     isVerified            Boolean      @default(false)
     verifiedByOfficial    Boolean      @default(false)
-    authenticityScore     Float?       // 0-100 probability score from AI
+    authenticityScore     Float?       // 0-100 overall authenticity score from AI
     verificationSource    String?      // Organization that verified (e.g., "Discogs", "Vinyl Authenticators Inc.")
+
+    // AI Insights - Authenticity breakdown
+    labelMatchScore       Float?       // 0-100 score for label authenticity
+    matrixNumberScore     Float?       // 0-100 score for matrix number verification
+    typographyScore       Float?       // 0-100 score for typography matching
+    serialRangeScore      Float?       // 0-100 score for serial range verification
+    authenticityNotes     String?      @db.Text // AI-generated notes about authenticity
+
+    // AI Insights - Condition breakdown
+    conditionScore        Float?       // 0-100 overall condition score from AI
+    vinylSurfaceScore     Float?       // 0-100 score for vinyl surface condition
+    sleeveScore           Float?       // 0-100 score for sleeve/cover condition
+    labelConditionScore   Float?       // 0-100 score for label condition
+    edgesScore            Float?       // 0-100 score for edges/corners condition
+    conditionNotes        String?      @db.Text // AI-generated notes about condition
 
     // Marketplace fields
     isSold                Boolean      @default(false)
