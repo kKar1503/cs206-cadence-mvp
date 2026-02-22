@@ -138,7 +138,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Ensure user1Id < user2Id for consistency (alphabetical order)
-    const [user1Id, user2Id] = [userId, otherUserId].sort();
+    const sortedIds = [userId, otherUserId].sort();
+    const user1Id = sortedIds[0]!;
+    const user2Id = sortedIds[1]!;
 
     console.log("Sorted user IDs:", { user1Id, user2Id });
 

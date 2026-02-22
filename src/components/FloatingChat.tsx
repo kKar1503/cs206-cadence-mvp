@@ -77,42 +77,46 @@ export function FloatingChat() {
 
   // Listen for new chat requests
   useEffect(() => {
-    const handleNewChatRequest = async (event: CustomEvent<{ otherUserId: string; listingId: string }>) => {
+    const handleNewChatRequest = (event: Event) => {
+      const customEvent = event as CustomEvent<{ otherUserId: string; listingId: string }>;
+
       if (!session?.user?.id) {
         router.push("/auth/signin");
         return;
       }
 
-      const { otherUserId, listingId } = event.detail;
+      const { otherUserId, listingId } = customEvent.detail;
 
-      try {
-        // Create or get conversation
-        const res = await fetch("/api/conversations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ otherUserId, listingId }),
-        });
+      void (async () => {
+        try {
+          // Create or get conversation
+          const res = await fetch("/api/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ otherUserId, listingId }),
+          });
 
-        if (res.ok) {
-          const conv = await res.json() as { id: string; otherUser: User; listingId: string };
+          if (res.ok) {
+            const conv = await res.json() as { id: string; otherUser: User; listingId: string };
 
-          // Fetch the full conversation with listing details
-          await fetchConversations();
+            // Fetch the full conversation with listing details
+            await fetchConversations();
 
-          // Find and open the conversation
-          const fullConv = conversations.find(c => c.id === conv.id);
-          if (fullConv) {
-            await openChat(fullConv);
+            // Find and open the conversation
+            const fullConv = conversations.find(c => c.id === conv.id);
+            if (fullConv) {
+              await openChat(fullConv);
+            }
           }
+        } catch (error) {
+          console.error("Error starting new chat:", error);
         }
-      } catch (error) {
-        console.error("Error starting new chat:", error);
-      }
+      })();
     };
 
-    window.addEventListener("startNewChat", handleNewChatRequest as EventListener);
+    window.addEventListener("startNewChat", handleNewChatRequest);
     return () => {
-      window.removeEventListener("startNewChat", handleNewChatRequest as EventListener);
+      window.removeEventListener("startNewChat", handleNewChatRequest);
     };
   }, [session, router, conversations]);
 
