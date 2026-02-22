@@ -154,7 +154,7 @@ export async function POST(
     const review = await db.review.create({
       data: {
         rating,
-        comment,
+        comment: comment ?? "",
         reviewerId: session.user.id,
         sellerId,
         listingId,
