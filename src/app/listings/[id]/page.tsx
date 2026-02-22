@@ -419,21 +419,283 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               </Card>
             )}
 
-            {/* AI Authenticity */}
-            {listing.isVerified && listing.authenticityScore !== null && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            {/* AI Insights Overview - replaces old AI Verified badge */}
+            {!showAuthenticityDetails && !showConditionDetails && (listing.authenticityScore ?? listing.conditionScore) && (
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* Authenticity Score */}
+                    {listing.authenticityScore && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">Authenticity</span>
+                          <span className="font-bold text-lg">{listing.authenticityScore.toFixed(1)}%</span>
+                        </div>
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-primary/80"
+                            style={{ width: `${listing.authenticityScore}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Condition Score */}
+                    {listing.conditionScore && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium">Condition</span>
+                          <span className="font-bold text-lg">{listing.conditionScore.toFixed(1)}%</span>
+                        </div>
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-primary to-primary/80"
+                            style={{ width: `${listing.conditionScore}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* View Details Link */}
+                  {(listing.authenticityNotes ?? listing.conditionNotes) && (
+                    <button
+                      onClick={() => {
+                        setShowAuthenticityDetails(true);
+                      }}
+                      className="flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                    >
+                      View Details
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Authenticity Details */}
+            {showAuthenticityDetails && listing.authenticityScore && (
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
+                    <button
+                      onClick={() => setShowAuthenticityDetails(false)}
+                      className="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Authenticity Section */}
                   <div>
-                    <p className="text-sm font-semibold text-primary">AI Verified Authentic</p>
-                    <p className="text-sm text-muted-foreground">{listing.authenticityScore.toFixed(1)}% authenticity score</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-semibold text-base">Authenticity</span>
+                      <span className="font-bold text-xl">{listing.authenticityScore.toFixed(1)}%</span>
+                    </div>
+
+                    {listing.authenticityNotes && (
+                      <p className="text-sm text-muted-foreground mb-4">{listing.authenticityNotes}</p>
+                    )}
+
+                    {/* Authenticity Breakdown */}
+                    <div className="space-y-3">
+                      {listing.labelMatchScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Label match</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.labelMatchScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                            {listing.labelMatchScore >= 90 ? "Pass" : listing.labelMatchScore >= 70 ? "Partial" : "Fail"}
+                          </span>
+                        </div>
+                      )}
+
+                      {listing.matrixNumberScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Matrix number</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.matrixNumberScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                            {listing.matrixNumberScore >= 90 ? "Pass" : listing.matrixNumberScore >= 70 ? "Partial" : "Fail"}
+                          </span>
+                        </div>
+                      )}
+
+                      {listing.typographyScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Typography</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.typographyScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                            {listing.typographyScore >= 90 ? "Pass" : listing.typographyScore >= 70 ? "Partial" : "Fail"}
+                          </span>
+                        </div>
+                      )}
+
+                      {listing.serialRangeScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Serial range</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.serialRangeScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-orange-600 min-w-[50px] text-right">
+                            {listing.serialRangeScore >= 90 ? "Pass" : listing.serialRangeScore >= 70 ? "Partial" : "Fail"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Navigation buttons */}
+                    {listing.conditionScore && (
+                      <div className="flex items-center justify-end mt-6">
+                        <button
+                          onClick={() => {
+                            setShowAuthenticityDetails(false);
+                            setShowConditionDetails(true);
+                          }}
+                          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                        >
+                          View Condition Details
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Condition Details */}
+            {showConditionDetails && listing.conditionScore && (
+              <Card className="border-2">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
+                    <button
+                      onClick={() => setShowConditionDetails(false)}
+                      className="text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Condition Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-semibold text-base">Condition</span>
+                      <span className="font-bold text-xl">{listing.conditionScore.toFixed(1)}%</span>
+                    </div>
+
+                    {listing.conditionNotes && (
+                      <p className="text-sm text-muted-foreground mb-4">{listing.conditionNotes}</p>
+                    )}
+
+                    {/* Condition Breakdown */}
+                    <div className="space-y-3">
+                      {listing.vinylSurfaceScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Vinyl surface</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.vinylSurfaceScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                            {listing.vinylSurfaceScore}
+                          </span>
+                        </div>
+                      )}
+
+                      {listing.sleeveScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Sleeve / cover</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.sleeveScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                            {listing.sleeveScore}
+                          </span>
+                        </div>
+                      )}
+
+                      {listing.labelConditionScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Label</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.labelConditionScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                            {listing.labelConditionScore}
+                          </span>
+                        </div>
+                      )}
+
+                      {listing.edgesScore !== null && (
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm min-w-[120px]">Edges / corners</span>
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary"
+                              style={{ width: `${listing.edgesScore}%` }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                            {listing.edgesScore}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Navigation buttons */}
+                    {listing.authenticityScore && (
+                      <div className="flex items-center justify-start mt-6">
+                        <button
+                          onClick={() => {
+                            setShowConditionDetails(false);
+                            setShowAuthenticityDetails(true);
+                          }}
+                          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          View Authenticity Details
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             )}
 
             {/* No AI Verification */}
-            {!listing.isVerified && listing.authenticityScore === null && (
+            {!showAuthenticityDetails && !showConditionDetails && !listing.isVerified && listing.authenticityScore === null && (
               <Card className="border-gray-300 bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700">
                 <CardContent className="flex items-start gap-3 p-4">
                   <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gray-500" />
@@ -586,271 +848,6 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 </Card>
               )}
 
-              {/* AI Insights Overview */}
-              {(listing.authenticityScore ?? listing.conditionScore) && (
-                <Card className="mt-4 border-2">
-                  <CardHeader className="pb-3">
-                    <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-6">
-                      {/* Authenticity Score */}
-                      {listing.authenticityScore && (
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">Authenticity</span>
-                            <span className="font-bold text-lg">{listing.authenticityScore.toFixed(1)}%</span>
-                          </div>
-                          <div className="h-3 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-primary to-primary/80"
-                              style={{ width: `${listing.authenticityScore}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Condition Score */}
-                      {listing.conditionScore && (
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">Condition</span>
-                            <span className="font-bold text-lg">{listing.conditionScore.toFixed(1)}%</span>
-                          </div>
-                          <div className="h-3 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-to-r from-primary to-primary/80"
-                              style={{ width: `${listing.conditionScore}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* View Details Link */}
-                    {(listing.authenticityNotes ?? listing.conditionNotes) && (
-                      <button
-                        onClick={() => {
-                          setShowAuthenticityDetails(true);
-                        }}
-                        className="flex items-center gap-2 text-sm text-primary hover:underline font-medium"
-                      >
-                        View Details
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Authenticity Details */}
-              {showAuthenticityDetails && listing.authenticityScore && (
-                <Card className="mt-4 border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
-                      <button
-                        onClick={() => setShowAuthenticityDetails(false)}
-                        className="text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Authenticity Section */}
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-semibold text-base">Authenticity</span>
-                        <span className="font-bold text-xl">{Math.round(listing.authenticityScore)}/100</span>
-                      </div>
-
-                      {listing.authenticityNotes && (
-                        <p className="text-sm text-muted-foreground mb-4">{listing.authenticityNotes}</p>
-                      )}
-
-                      {/* Authenticity Breakdown */}
-                      <div className="space-y-3">
-                        {listing.labelMatchScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Label match</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.labelMatchScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {listing.labelMatchScore >= 90 ? "Pass" : listing.labelMatchScore >= 70 ? "Partial" : "Fail"}
-                            </span>
-                          </div>
-                        )}
-
-                        {listing.matrixNumberScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Matrix number</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.matrixNumberScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {listing.matrixNumberScore >= 90 ? "Pass" : listing.matrixNumberScore >= 70 ? "Partial" : "Fail"}
-                            </span>
-                          </div>
-                        )}
-
-                        {listing.typographyScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Typography</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.typographyScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {listing.typographyScore >= 90 ? "Pass" : listing.typographyScore >= 70 ? "Partial" : "Fail"}
-                            </span>
-                          </div>
-                        )}
-
-                        {listing.serialRangeScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Serial range</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.serialRangeScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-orange-600 min-w-[50px] text-right">
-                              {listing.serialRangeScore >= 90 ? "Pass" : listing.serialRangeScore >= 70 ? "Partial" : "Fail"}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Navigation buttons */}
-                      <div className="flex items-center justify-between mt-6">
-                        <button
-                          onClick={() => setShowConditionDetails(true)}
-                          className="flex items-center gap-1 text-sm font-medium"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Condition Details */}
-              {showConditionDetails && listing.conditionScore && (
-                <Card className="mt-4 border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
-                      <button
-                        onClick={() => setShowConditionDetails(false)}
-                        className="text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Condition Section */}
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-semibold text-base">Condition</span>
-                        <span className="font-bold text-xl">{Math.round(listing.conditionScore)}/100</span>
-                      </div>
-
-                      {listing.conditionNotes && (
-                        <p className="text-sm text-muted-foreground mb-4">{listing.conditionNotes}</p>
-                      )}
-
-                      {/* Condition Breakdown */}
-                      <div className="space-y-3">
-                        {listing.vinylSurfaceScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Vinyl surface</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.vinylSurfaceScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {listing.vinylSurfaceScore}
-                            </span>
-                          </div>
-                        )}
-
-                        {listing.sleeveScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Sleeve / cover</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.sleeveScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {listing.sleeveScore}
-                            </span>
-                          </div>
-                        )}
-
-                        {listing.labelConditionScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Label</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.labelConditionScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {listing.labelConditionScore}
-                            </span>
-                          </div>
-                        )}
-
-                        {listing.edgesScore !== null && (
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">Edges / corners</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${listing.edgesScore}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {listing.edgesScore}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Navigation buttons */}
-                      <div className="flex items-center justify-between mt-6">
-                        <button
-                          onClick={() => {
-                            setShowConditionDetails(false);
-                            setShowAuthenticityDetails(true);
-                          }}
-                          className="flex items-center gap-1 text-sm font-medium"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
             <Separator />
