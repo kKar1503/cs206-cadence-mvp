@@ -6,6 +6,7 @@ import { Providers } from "@/components/providers";
 import { NavHeader } from "@/components/nav-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { FloatingChat } from "@/components/FloatingChat";
+import { SessionValidator } from "@/components/SessionValidator";
 
 export const metadata: Metadata = {
   title: "Cadence - AI-Driven Music Marketplace Intelligence",
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body>
         <Providers>
           <TooltipProvider>
+            <SessionValidator />
             <NavHeader />
             {children}
             <FloatingChat />
