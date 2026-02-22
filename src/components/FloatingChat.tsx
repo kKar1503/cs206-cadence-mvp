@@ -300,7 +300,7 @@ export function FloatingChat() {
         {openChats.map((chat) => (
           <Card
             key={chat.conversationId}
-            className="w-80 shadow-lg py-0 gap-0"
+            className="w-80 shadow-lg py-0 gap-0 border-0 overflow-hidden"
             style={{ marginBottom: 0 }}
           >
             <CardHeader className="flex flex-row items-center justify-between p-4 bg-primary text-primary-foreground">
