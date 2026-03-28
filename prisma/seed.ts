@@ -624,41 +624,7 @@ async function main() {
       },
     }),
 
-    // Add a few CD and merch listings
-    prisma.listing.create({
-      data: {
-        title: "In Rainbows",
-        artist: "Radiohead",
-        description:
-          "Special edition CD with bonus disc. Includes booklet and artwork. CD is in perfect condition. 2007 release.",
-        type: "CD",
-        condition: "LIKE_NEW",
-        price: 25.00,
-        year: 2007,
-        genre: "Alternative Rock",
-        label: "XL Recordings",
-        isVerified: false,
-        authenticityScore: 90.5,
-        labelMatchScore: 92,
-        matrixNumberScore: 90,
-        typographyScore: 89,
-        serialRangeScore: 91,
-        authenticityNotes: "Special edition 2007 release verified. Includes bonus disc and all original materials.",
-        conditionScore: 93,
-        vinylSurfaceScore: 95,
-        sleeveScore: 92,
-        labelConditionScore: 93,
-        edgesScore: 92,
-        conditionNotes: "CD in perfect condition. Booklet and artwork intact.",
-        sellerId: users[0]!.id,
-        images: JSON.stringify(["https://placehold.co/400x400/fc6736/ffffff.png?text=In+Rainbows+CD"]),
-        imageUrl: "https://placehold.co/400x400/fc6736/ffffff.png?text=In+Rainbows+CD",
-        priceLabel: "FAIR",
-        pricePercentage: 5.2,
-        priceDataUpdated: new Date("2025-01-13"),
-        createdAt: new Date("2025-02-08T10:00:00Z"),
-      },
-    }),
+    // Add a merch listing
     prisma.listing.create({
       data: {
         title: "Beatles Vintage Band T-Shirt",
@@ -870,8 +836,7 @@ async function main() {
   // listings[10] = OK Computer        (seller: users[4] Emma)
   // listings[11] = Random Access Mem  (seller: users[4] Emma)
   // listings[12] = Blonde on Blonde   (seller: users[4] Emma)
-  // listings[13] = In Rainbows CD     (seller: users[0] Admin)
-  // listings[14] = Beatles Shirt      (seller: users[2] Sarah)
+  // listings[13] = Beatles Shirt      (seller: users[2] Sarah)
 
   // Seed reviews — buyers review sellers after a transaction
   // Reviews for Alex Chen (users[1]) — seller of Rumours and Dark Side
