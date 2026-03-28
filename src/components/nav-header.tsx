@@ -13,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, LogOut, Plus, Heart, ShoppingBag } from "lucide-react";
+import { User, LogOut, Plus, Heart, ShoppingBag, BarChart3 } from "lucide-react";
+import { NotificationBell } from "@/components/notification-bell";
 
 export function NavHeader() {
   const { data: session, status } = useSession();
@@ -74,6 +75,8 @@ export function NavHeader() {
                 </Link>
               </Button>
 
+              <NotificationBell />
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
@@ -105,6 +108,12 @@ export function NavHeader() {
                     <Link href="/orders" className="cursor-pointer">
                       <ShoppingBag className="mr-2 h-4 w-4" />
                       <span>My Orders</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/seller" className="cursor-pointer">
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      <span>Seller Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
