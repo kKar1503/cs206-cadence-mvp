@@ -19,7 +19,11 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  ShieldCheck,
+  Disc3,
 } from "lucide-react";
+import { extractVideoFrames } from "@/lib/extract-video-frames";
+import { getScoringLabels } from "@/lib/scoring-labels";
 
 type Step = 1 | 2 | 3 | 3.5 | 4;
 
@@ -28,6 +32,26 @@ interface Listing {
   title: string;
   artist: string;
   sellerId: string;
+  images: string;
+  year?: number | null;
+  label?: string | null;
+  condition: string;
+  type: string;
+}
+
+interface VerificationScores {
+  authenticityScore: number;
+  labelMatchScore: number;
+  matrixNumberScore: number;
+  typographyScore: number;
+  serialRangeScore: number;
+  authenticityNotes: string;
+  conditionScore: number;
+  vinylSurfaceScore: number;
+  sleeveScore: number;
+  labelConditionScore: number;
+  edgesScore: number;
+  conditionNotes: string;
 }
 
 export default function AIVerifyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -54,6 +78,7 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
 
   // Step 4: Results
   const [aiScore, setAiScore] = useState<number | null>(null);
+  const [scores, setScores] = useState<VerificationScores | null>(null);
 
   // Processing state
   const [processingProgress, setProcessingProgress] = useState(0);
@@ -67,7 +92,7 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
           router.push("/listings");
           return;
         }
-        const data = await res.json() as { listing: Listing };
+        const data = (await res.json()) as { listing: Listing };
         setListing(data.listing);
 
         // Check ownership
@@ -141,82 +166,20 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
     setCertificationPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const calculateAIScore = (): number => {
-    // Check if it's a Radiohead listing (special case for high score)
-    const isRadiohead = listing?.artist.toLowerCase() === "radiohead";
-
-    if (isRadiohead) {
-      // Radiohead listings get very high scores (95-100%)
-      let baseScore = 95;
-
-      // Add points based on verification materials
-      if (additionalPhotos.length >= 5) baseScore += 1.5;
-      if (additionalPhotos.length >= 10) baseScore += 0.8;
-      if (video) baseScore += 1.2;
-      if (certifications.length >= 1) baseScore += 0.9;
-      if (certifications.length >= 2) baseScore += 0.6;
-
-      // Add realistic decimal variation
-      const decimalVariation = Math.random() * 0.5;
-      let finalScore = baseScore + decimalVariation;
-
-      // Ensure it doesn't exceed 100%
-      finalScore = Math.min(finalScore, 99.9);
-
-      // Round to 1 decimal place
-      return Math.round(finalScore * 10) / 10;
-    }
-
-    // For non-Radiohead listings, use more complex realistic scoring
-    let baseScore = 25; // Starting point
-
-    // Photos contribution (non-linear scaling)
-    if (additionalPhotos.length > 0) {
-      const photoScore = Math.min(
-        15 + additionalPhotos.length * 2.5 + Math.sqrt(additionalPhotos.length) * 3,
-        40
-      );
-      baseScore += photoScore;
-    }
-
-    // Video contribution (significant boost)
-    if (video) {
-      baseScore += 20 + Math.random() * 5;
-    }
-
-    // Certification contribution (high value, non-linear)
-    if (certifications.length > 0) {
-      const certScore = Math.min(
-        certifications.length * 8 + Math.pow(certifications.length, 1.3) * 2,
-        25
-      );
-      baseScore += certScore;
-    }
-
-    // Add realistic variation based on completeness
-    const completionBonus =
-      (additionalPhotos.length > 0 ? 1 : 0) +
-      (video ? 1 : 0) +
-      (certifications.length > 0 ? 1 : 0);
-
-    baseScore += completionBonus * 2.5;
-
-    // Add some randomness with decimal precision
-    const randomAdjustment = (Math.random() - 0.5) * 8;
-    baseScore += randomAdjustment;
-
-    // Add realistic decimal component
-    const decimalComponent = Math.random() * 0.9;
-    baseScore += decimalComponent;
-
-    // Cap at 97.5% for non-Radiohead listings (keeping it realistic)
-    baseScore = Math.min(baseScore, 97.5);
-
-    // Ensure minimum score
-    baseScore = Math.max(baseScore, 18.5);
-
-    // Round to 1 decimal place
-    return Math.round(baseScore * 10) / 10;
+  const compressImage = (dataUrl: string, maxSize = 1024): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = dataUrl;
+    });
   };
 
   const handleNextStep = () => {
@@ -237,93 +200,100 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
 
   const handleFinishVerification = async () => {
     setIsProcessing(true);
-    setCurrentStep(3.5 as Step); // Use 3.5 as loading state
+    setCurrentStep(3.5 as Step);
 
-    // Calculate AI score
-    const score = calculateAIScore();
-
-    // Simulate AI processing with progress steps
-    const steps = [
-      { message: "Verifying listing details", duration: 1000 },
-      { message: "Verifying listing images", duration: 1200 },
-    ];
-
-    // Add conditional steps based on what was uploaded
-    if (additionalPhotos.length > 0) {
-      steps.push({ message: "Verifying additional photos", duration: 1500 });
-    }
-
-    if (video) {
-      steps.push({ message: "Verifying 360° Video View", duration: 1800 });
-    }
-
-    if (certifications.length > 0) {
-      steps.push({ message: "Verifying certifications", duration: 1300 });
-    }
-
-    steps.push({ message: "Compiling score...", duration: 1500 });
-
-    // Calculate total duration and run through steps
-    const totalDuration = steps.reduce((sum, step) => sum + step.duration, 0);
-    let currentProgress = 0;
-
-    for (const step of steps) {
-      setProcessingMessage(step.message);
-
-      // Calculate progress increment for this step
-      const progressIncrement = (step.duration / totalDuration) * 100;
-      const targetProgress = currentProgress + progressIncrement;
-
-      // Animate progress bar smoothly
-      const startProgress = currentProgress;
-      const stepStartTime = Date.now();
-
-      await new Promise<void>((resolve) => {
-        const interval = setInterval(() => {
-          const elapsed = Date.now() - stepStartTime;
-          const progress = Math.min(elapsed / step.duration, 1);
-
-          // Add some randomness to make it feel more realistic
-          const randomJitter = (Math.random() - 0.5) * 2;
-          const newProgress = startProgress + (progressIncrement * progress) + randomJitter;
-
-          setProcessingProgress(Math.min(Math.max(newProgress, currentProgress), targetProgress));
-
-          if (elapsed >= step.duration) {
-            clearInterval(interval);
-            currentProgress = targetProgress;
-            setProcessingProgress(targetProgress);
-            resolve();
-          }
-        }, 50);
-      });
-    }
-
-    // Ensure we reach 100%
-    setProcessingProgress(100);
-    setAiScore(score);
-
-    // Brief pause at 100% before showing results
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Update listing with AI score
     try {
-      const res = await fetch(`/api/listings/${id}/ai-score`, {
+      // Step 1: Prepare images
+      setProcessingMessage("Preparing images...");
+      setProcessingProgress(5);
+
+      // Compress additional photos
+      const compressedPhotos = await Promise.all(
+        photoPreviews.map((p) => compressImage(p)),
+      );
+
+      // Step 2: Extract video frames if video exists
+      let videoFrameData: string[] = [];
+      if (video) {
+        setProcessingMessage("Extracting video frames...");
+        setProcessingProgress(15);
+        try {
+          videoFrameData = await extractVideoFrames(video, 5);
+        } catch (err) {
+          console.warn("Video frame extraction failed, continuing without:", err);
+        }
+      }
+
+      // Compress certifications
+      const compressedCerts = await Promise.all(
+        certificationPreviews.map((c) => compressImage(c)),
+      );
+
+      // Get listing's existing image URLs
+      let listingImageUrls: string[] = [];
+      try {
+        listingImageUrls = JSON.parse(listing!.images) as string[];
+      } catch {
+        // images field might be empty or malformed
+      }
+
+      setProcessingMessage("Analyzing authenticity...");
+      setProcessingProgress(30);
+
+      // Step 3: Call the real AI verification API
+      const res = await fetch(`/api/listings/${id}/ai-verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          authenticityScore: score,
-          isVerified: true,
+          listingImageUrls,
+          photos: compressedPhotos,
+          videoFrames: videoFrameData,
+          certificates: compressedCerts,
+          listing: {
+            title: listing!.title,
+            artist: listing!.artist,
+            year: listing!.year,
+            label: listing!.label,
+            condition: listing!.condition,
+            type: listing!.type,
+          },
         }),
       });
 
+      // Animate progress while waiting
+      setProcessingMessage("Assessing condition...");
+      setProcessingProgress(60);
+
       if (!res.ok) {
-        throw new Error("Failed to update score");
+        const errorData = await res.json() as { error: string };
+        throw new Error(errorData.error || "Verification failed");
       }
 
+      setProcessingMessage("Compiling results...");
+      setProcessingProgress(90);
+
+      const data = await res.json() as {
+        authenticity: VerificationScores;
+        condition: VerificationScores;
+      };
+
+      // Merge authenticity + condition into one scores object
+      const allScores: VerificationScores = {
+        ...data.authenticity,
+        ...data.condition,
+      };
+
+      setProcessingProgress(100);
+      setAiScore(allScores.authenticityScore);
+      setScores(allScores);
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
       setCurrentStep(4);
     } catch (err) {
-      console.error("Failed to update AI score:", err);
+      console.error("AI verification failed:", err);
+      // Go back to step 3 so user can retry
+      setCurrentStep(3);
+      alert(err instanceof Error ? err.message : "Verification failed. Please try again.");
     } finally {
       setIsProcessing(false);
       setProcessingProgress(0);
@@ -618,16 +588,16 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
             {/* Step 4: Results */}
             {currentStep === 4 && aiScore !== null && (
               <>
-                <div className="text-center space-y-6 py-8">
-                  <div className="mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
-                    <div className="text-4xl font-bold text-primary-foreground">
-                      {aiScore}%
+                <div className="space-y-6 py-8">
+                  {/* Overall Score */}
+                  <div className="text-center">
+                    <div className="mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
+                      <div className="text-4xl font-bold text-primary-foreground">
+                        {Math.round(aiScore)}%
+                      </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2">Authenticity Score</h3>
-                    <p className="text-muted-foreground mb-4">
+                    <h3 className="text-2xl font-bold mt-4 mb-2">Authenticity Score</h3>
+                    <p className="text-muted-foreground">
                       {aiScore >= 90 && "Outstanding! Your item has an exceptional authenticity score."}
                       {aiScore >= 80 && aiScore < 90 && "Excellent! Your item has a high authenticity score."}
                       {aiScore >= 60 && aiScore < 80 && "Good! Your item has a solid authenticity score."}
@@ -636,30 +606,93 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
                     </p>
                   </div>
 
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                    <p className="text-sm text-muted-foreground text-center">
-                      This score is calculated using advanced AI algorithms that analyze your verification materials including photos, video, and documentation to assess authenticity.
-                    </p>
-                    <div className="grid grid-cols-3 gap-4 pt-2">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">{additionalPhotos.length}</div>
-                        <div className="text-xs text-muted-foreground">Photos</div>
+                  {/* Authenticity Breakdown */}
+                  {scores && (
+                    <div className="space-y-4">
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <ShieldCheck className="h-4 w-4 text-primary" />
+                          <span className="font-semibold text-sm">Authenticity Breakdown</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {(() => {
+                            const l = getScoringLabels(listing?.type ?? "VINYL");
+                            return [
+                              { label: l.authenticity.labelMatch, value: scores.labelMatchScore },
+                              { label: l.authenticity.matrixNumber, value: scores.matrixNumberScore },
+                              { label: l.authenticity.typography, value: scores.typographyScore },
+                              { label: l.authenticity.serialRange, value: scores.serialRangeScore },
+                            ];
+                          })().map(({ label, value }) => (
+                            <div key={label} className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">{label}</span>
+                              <span className="font-medium">{Math.round(value)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                        {scores.authenticityNotes && (
+                          <p className="text-xs text-muted-foreground mt-2 italic">
+                            {scores.authenticityNotes}
+                          </p>
+                        )}
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">{video ? "✓" : "—"}</div>
-                        <div className="text-xs text-muted-foreground">Video</div>
+
+                      {/* Condition Breakdown */}
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Disc3 className="h-4 w-4 text-primary" />
+                          <span className="font-semibold text-sm">Condition Breakdown</span>
+                          <span className="ml-auto font-medium text-sm">{Math.round(scores.conditionScore)}%</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {(() => {
+                            const l = getScoringLabels(listing?.type ?? "VINYL");
+                            return [
+                              { label: l.condition.surface, value: scores.vinylSurfaceScore },
+                              { label: l.condition.sleeve, value: scores.sleeveScore },
+                              { label: l.condition.label, value: scores.labelConditionScore },
+                              { label: l.condition.edges, value: scores.edgesScore },
+                            ];
+                          })().map(({ label, value }) => (
+                            <div key={label} className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">{label}</span>
+                              <span className="font-medium">{Math.round(value)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                        {scores.conditionNotes && (
+                          <p className="text-xs text-muted-foreground mt-2 italic">
+                            {scores.conditionNotes}
+                          </p>
+                        )}
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-primary">{certifications.length}</div>
-                        <div className="text-xs text-muted-foreground">Certificates</div>
+
+                      {/* Materials Summary */}
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-primary">{additionalPhotos.length}</div>
+                            <div className="text-xs text-muted-foreground">Photos</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-primary">{video ? "✓" : "—"}</div>
+                            <div className="text-xs text-muted-foreground">Video</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-primary">{certifications.length}</div>
+                            <div className="text-xs text-muted-foreground">Certificates</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  <Badge variant={aiScore >= 80 ? "default" : "secondary"} className="text-lg px-4 py-2">
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    AI Verified
-                  </Badge>
+                  <div className="text-center">
+                    <Badge variant={aiScore >= 80 ? "default" : "secondary"} className="text-lg px-4 py-2">
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      AI Verified
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-3">
@@ -683,6 +716,7 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
                       setCertifications([]);
                       setCertificationPreviews([]);
                       setAiScore(null);
+                      setScores(null);
                     }}
                   >
                     Run Verification Again
@@ -696,8 +730,8 @@ export default function AIVerifyPage({ params }: { params: Promise<{ id: string 
         {/* Help Text */}
         {currentStep < 4 && (
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>All uploaded files are processed locally and not stored on our servers.</p>
-            <p>This ensures your privacy while calculating the authenticity score.</p>
+            <p>Images are sent to our AI for analysis and are not permanently stored.</p>
+            <p>Verification is powered by advanced computer vision technology.</p>
           </div>
         )}
       </div>

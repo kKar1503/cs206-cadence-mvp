@@ -30,6 +30,7 @@ import {
   Minus,
   Info,
 } from "lucide-react";
+import { getScoringLabels } from "@/lib/scoring-labels";
 
 interface Seller {
   id: string;
@@ -504,65 +505,29 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
                     {/* Authenticity Breakdown */}
                     <div className="space-y-3">
-                      {listing.labelMatchScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Label match</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.labelMatchScore}%` }}
-                            />
+                      {(() => {
+                        const labels = getScoringLabels(listing.type);
+                        const items = [
+                          { label: labels.authenticity.labelMatch, score: listing.labelMatchScore },
+                          { label: labels.authenticity.matrixNumber, score: listing.matrixNumberScore },
+                          { label: labels.authenticity.typography, score: listing.typographyScore },
+                          { label: labels.authenticity.serialRange, score: listing.serialRangeScore },
+                        ];
+                        return items.map(({ label, score }) => score !== null && (
+                          <div key={label} className="flex items-center gap-3">
+                            <span className="text-sm min-w-[120px]">{label}</span>
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary"
+                                style={{ width: `${score}%` }}
+                              />
+                            </div>
+                            <span className={`text-sm font-semibold min-w-[50px] text-right ${score >= 70 ? "text-green-600" : "text-orange-600"}`}>
+                              {score >= 90 ? "Pass" : score >= 70 ? "Partial" : "Fail"}
+                            </span>
                           </div>
-                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                            {listing.labelMatchScore >= 90 ? "Pass" : listing.labelMatchScore >= 70 ? "Partial" : "Fail"}
-                          </span>
-                        </div>
-                      )}
-
-                      {listing.matrixNumberScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Matrix number</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.matrixNumberScore}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                            {listing.matrixNumberScore >= 90 ? "Pass" : listing.matrixNumberScore >= 70 ? "Partial" : "Fail"}
-                          </span>
-                        </div>
-                      )}
-
-                      {listing.typographyScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Typography</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.typographyScore}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                            {listing.typographyScore >= 90 ? "Pass" : listing.typographyScore >= 70 ? "Partial" : "Fail"}
-                          </span>
-                        </div>
-                      )}
-
-                      {listing.serialRangeScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Serial range</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.serialRangeScore}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-semibold text-orange-600 min-w-[50px] text-right">
-                            {listing.serialRangeScore >= 90 ? "Pass" : listing.serialRangeScore >= 70 ? "Partial" : "Fail"}
-                          </span>
-                        </div>
-                      )}
+                        ));
+                      })()}
                     </div>
 
                     {/* Navigation buttons */}
@@ -613,65 +578,29 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
                     {/* Condition Breakdown */}
                     <div className="space-y-3">
-                      {listing.vinylSurfaceScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Vinyl surface</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.vinylSurfaceScore}%` }}
-                            />
+                      {(() => {
+                        const labels = getScoringLabels(listing.type);
+                        const items = [
+                          { label: labels.condition.surface, score: listing.vinylSurfaceScore },
+                          { label: labels.condition.sleeve, score: listing.sleeveScore },
+                          { label: labels.condition.label, score: listing.labelConditionScore },
+                          { label: labels.condition.edges, score: listing.edgesScore },
+                        ];
+                        return items.map(({ label, score }) => score !== null && (
+                          <div key={label} className="flex items-center gap-3">
+                            <span className="text-sm min-w-[120px]">{label}</span>
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-primary"
+                                style={{ width: `${score}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                              {score}
+                            </span>
                           </div>
-                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                            {listing.vinylSurfaceScore}
-                          </span>
-                        </div>
-                      )}
-
-                      {listing.sleeveScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Sleeve / cover</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.sleeveScore}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                            {listing.sleeveScore}
-                          </span>
-                        </div>
-                      )}
-
-                      {listing.labelConditionScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Label</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.labelConditionScore}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                            {listing.labelConditionScore}
-                          </span>
-                        </div>
-                      )}
-
-                      {listing.edgesScore !== null && (
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm min-w-[120px]">Edges / corners</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary"
-                              style={{ width: `${listing.edgesScore}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                            {listing.edgesScore}
-                          </span>
-                        </div>
-                      )}
+                        ));
+                      })()}
                     </div>
 
                     {/* Navigation buttons */}
