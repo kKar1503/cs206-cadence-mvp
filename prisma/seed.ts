@@ -119,12 +119,15 @@ async function main() {
   const password = await hash("password123", 12);
 
   const users = await Promise.all([
-    // Admin user
+    // Admin user — all sellers use SMU address (81 Victoria St, Singapore 188065)
     prisma.user.create({
       data: {
         name: "Admin",
         email: "admin@abc.com",
         password,
+        postalCode: "188065",
+        latitude: 1.2966,
+        longitude: 103.8505,
       },
     }),
     prisma.user.create({
@@ -132,6 +135,9 @@ async function main() {
         name: "Alex Chen",
         email: "alex@example.com",
         password,
+        postalCode: "188065",
+        latitude: 1.2966,
+        longitude: 103.8505,
       },
     }),
     prisma.user.create({
@@ -139,6 +145,9 @@ async function main() {
         name: "Sarah Martinez",
         email: "sarah@example.com",
         password,
+        postalCode: "188065",
+        latitude: 1.2966,
+        longitude: 103.8505,
       },
     }),
     prisma.user.create({
@@ -146,6 +155,9 @@ async function main() {
         name: "Marcus Johnson",
         email: "marcus@example.com",
         password,
+        postalCode: "188065",
+        latitude: 1.2966,
+        longitude: 103.8505,
       },
     }),
     prisma.user.create({
@@ -153,6 +165,9 @@ async function main() {
         name: "Emma Thompson",
         email: "emma@example.com",
         password,
+        postalCode: "188065",
+        latitude: 1.2966,
+        longitude: 103.8505,
       },
     }),
     prisma.user.create({
@@ -160,6 +175,9 @@ async function main() {
         name: "David Lee",
         email: "david@example.com",
         password,
+        postalCode: "188065",
+        latitude: 1.2966,
+        longitude: 103.8505,
       },
     }),
   ]);

@@ -11,6 +11,10 @@ export interface AuthenticityResult {
   typographyScore: number;
   serialRangeScore: number;
   authenticityNotes: string;
+  labelMatchJustification: string;
+  matrixNumberJustification: string;
+  typographyJustification: string;
+  serialRangeJustification: string;
 }
 
 export interface ConditionResult {
@@ -20,4 +24,8 @@ export interface ConditionResult {
   labelConditionScore: number;
   edgesScore: number;
   conditionNotes: string;
+  surfaceJustification: string;
+  sleeveJustification: string;
+  labelJustification: string;
+  edgesJustification: string;
 }

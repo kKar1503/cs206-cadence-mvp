@@ -27,8 +27,35 @@ model User {
     ordersSold            Order[]        @relation("OrderSeller")
     favorites             Favorite[]
     messagesSent          Message[]      @relation("MessageSender")
+    postalCode            String?
+    latitude              Float?
+    longitude             Float?
+
     conversationsStarted  Conversation[] @relation("ConversationUser1")
     conversationsReceived Conversation[] @relation("ConversationUser2")
+    savedCards            SavedCard[]
+}
+
+// WARNING: This model stores raw card details in plaintext.
+// This is ONLY acceptable because the entire payment system is a fake/simulated
+// prototype for a school project (CS206). All card credentials stored here are
+// fake test data. In a real production system, you MUST use a PCI-compliant
+// payment processor (e.g., Stripe) and NEVER store raw card numbers.
+model SavedCard {
+    id             String   @id @default(cuid())
+    cardNumber     String   // Stored raw — fake/simulated payment only
+    cardName       String   // Cardholder name
+    expiryDate     String   // MM/YY format
+    cardType       String   // "visa" or "mastercard"
+    last4          String   // Last 4 digits for display
+
+    user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId         String
+
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+
+    @@index([userId])
 }
 
 enum ListingType {
@@ -81,6 +108,17 @@ model Listing {
     labelConditionScore   Float?       // 0-100 score for label condition
     edgesScore            Float?       // 0-100 score for edges/corners condition
     conditionNotes        String?      @db.Text // AI-generated notes about condition
+
+    // AI Insights - Per-sub-score justifications (JSON)
+    authenticityJustifications String?  @db.Text // JSON: { labelMatch, matrixNumber, typography, serialRange }
+    conditionJustifications    String?  @db.Text // JSON: { surface, sleeve, label, edges }
+
+    // Tracklist
+    tracklist             String?      @db.Text // JSON: [{ side: "A", tracks: ["Track 1", ...] }, ...]
+
+    // Promotion
+    isPromoted            Boolean      @default(false)
+    promotedUntil         DateTime?
 
     // Marketplace fields
     isSold                Boolean      @default(false)
@@ -163,6 +201,8 @@ model Order {
     sellerId    String
 
     amount      Float
+    shippingCost    Float?
+    shippingAddress String?   // Buyer's postal code
     status      String   @default("completed") // completed, pending, cancelled
 
     createdAt   DateTime @default(now())
