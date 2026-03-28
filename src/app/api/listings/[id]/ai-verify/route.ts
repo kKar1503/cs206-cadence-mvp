@@ -58,7 +58,7 @@ async function analyzeAuthenticity(
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     response_format: { type: "json_object" },
-    max_tokens: 500,
+    max_tokens: 800,
     messages: [
       {
         role: "system",
@@ -79,7 +79,11 @@ Return a JSON object with exactly these fields:
   "matrixNumberScore": <number 0-100, ${labels.authenticity.matrixNumber}>,
   "typographyScore": <number 0-100, ${labels.authenticity.typography}>,
   "serialRangeScore": <number 0-100, ${labels.authenticity.serialRange}>,
-  "authenticityNotes": "<2-3 sentence analysis of key findings>"
+  "authenticityNotes": "<2-3 sentence analysis of key findings>",
+  "labelMatchJustification": "<1 sentence explaining why ${labels.authenticity.labelMatch} received its score>",
+  "matrixNumberJustification": "<1 sentence explaining why ${labels.authenticity.matrixNumber} received its score>",
+  "typographyJustification": "<1 sentence explaining why ${labels.authenticity.typography} received its score>",
+  "serialRangeJustification": "<1 sentence explaining why ${labels.authenticity.serialRange} received its score>"
 }
 
 Use decimal precision (e.g., 87.3).`,
@@ -116,7 +120,7 @@ async function analyzeCondition(
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     response_format: { type: "json_object" },
-    max_tokens: 500,
+    max_tokens: 800,
     messages: [
       {
         role: "system",
@@ -139,7 +143,11 @@ Return a JSON object with exactly these fields:
   "sleeveScore": <number 0-100, ${labels.condition.sleeve}>,
   "labelConditionScore": <number 0-100, ${labels.condition.label}>,
   "edgesScore": <number 0-100, ${labels.condition.edges}>,
-  "conditionNotes": "<2-3 sentence condition assessment>"
+  "conditionNotes": "<2-3 sentence condition assessment>",
+  "surfaceJustification": "<1 sentence explaining why ${labels.condition.surface} received its score>",
+  "sleeveJustification": "<1 sentence explaining why ${labels.condition.sleeve} received its score>",
+  "labelJustification": "<1 sentence explaining why ${labels.condition.label} received its score>",
+  "edgesJustification": "<1 sentence explaining why ${labels.condition.edges} received its score>"
 }
 
 Use decimal precision (e.g., 87.3).`,
@@ -250,6 +258,12 @@ export async function POST(
         typographyScore: authenticity.typographyScore,
         serialRangeScore: authenticity.serialRangeScore,
         authenticityNotes: authenticity.authenticityNotes,
+        authenticityJustifications: JSON.stringify({
+          labelMatch: authenticity.labelMatchJustification,
+          matrixNumber: authenticity.matrixNumberJustification,
+          typography: authenticity.typographyJustification,
+          serialRange: authenticity.serialRangeJustification,
+        }),
 
         conditionScore: condition.conditionScore,
         vinylSurfaceScore: condition.vinylSurfaceScore,
@@ -257,6 +271,12 @@ export async function POST(
         labelConditionScore: condition.labelConditionScore,
         edgesScore: condition.edgesScore,
         conditionNotes: condition.conditionNotes,
+        conditionJustifications: JSON.stringify({
+          surface: condition.surfaceJustification,
+          sleeve: condition.sleeveJustification,
+          label: condition.labelJustification,
+          edges: condition.edgesJustification,
+        }),
       },
     });
 

@@ -91,6 +91,7 @@ export async function PATCH(
       genre?: string;
       label?: string;
       images: string[];
+      tracklist?: Array<{ side: string; tracks: string[] }> | null;
     };
 
     // Check if listing exists and user owns it
@@ -121,6 +122,7 @@ export async function PATCH(
         genre: body.genre,
         label: body.label,
         images: JSON.stringify(body.images),
+        tracklist: body.tracklist ? JSON.stringify(body.tracklist) : null,
       },
     });
 

@@ -1,11 +1,57 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, Search, Sparkles, Package, CheckCircle2, BarChart3 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ShieldCheck, Search, Sparkles, Package, CheckCircle2, BarChart3, Eye, ArrowRight } from "lucide-react";
 import { StaggeredGrid } from "@/components/ui/fade-in-section";
+import { db } from "@/server/db";
 
-export default function HomePage() {
+interface ListingWithSeller {
+  id: string;
+  title: string;
+  artist: string;
+  type: string;
+  condition: string;
+  price: number;
+  images: string;
+  imageUrl: string | null;
+  isVerified: boolean;
+  views: number;
+  createdAt: Date;
+  seller: { name: string | null };
+}
+
+function getFirstImage(listing: ListingWithSeller): string {
+  try {
+    const images = JSON.parse(listing.images) as string[];
+    return images[0] ?? listing.imageUrl ?? "https://placehold.co/400x400/fc6736/ffffff?text=No+Image";
+  } catch {
+    return listing.imageUrl ?? "https://placehold.co/400x400/fc6736/ffffff?text=No+Image";
+  }
+}
+
+function getConditionLabel(condition: string): string {
+  return condition.replace(/_/g, " ");
+}
+
+export default async function HomePage() {
+  // Fetch promoted listings first, then latest
+  const promotedListings = await db.listing.findMany({
+    where: { isSold: false, isPromoted: true, promotedUntil: { gte: new Date() } },
+    include: { seller: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+  });
+
+  const promotedIds = new Set(promotedListings.map((l) => l.id));
+
+  const latestListings = await db.listing.findMany({
+    where: { isSold: false, id: { notIn: [...promotedIds] } },
+    include: { seller: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+  });
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -330,6 +376,147 @@ export default function HomePage() {
           </StaggeredGrid>
         </div>
       </section>
+
+      {/* Featured Listings Section */}
+      {promotedListings.length > 0 && (
+        <section className="border-t bg-gradient-to-b from-amber-50/50 to-background py-20 dark:from-amber-950/10">
+          <div className="container mx-auto px-4">
+            <div className="mb-12">
+              <div className="mb-4 flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-amber-500" />
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                  Featured Listings
+                </h2>
+              </div>
+              <p className="text-lg text-muted-foreground">
+                Highlighted picks from our sellers
+              </p>
+            </div>
+
+            <StaggeredGrid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {promotedListings.map((listing) => (
+                <Link key={listing.id} href={`/listings/${listing.id}`}>
+                  <Card className="group h-full cursor-pointer overflow-hidden border-amber-200/50 transition-all hover:shadow-lg hover:border-amber-300 py-0 gap-0">
+                    <CardHeader className="p-0">
+                      <div className="relative aspect-square overflow-hidden">
+                        <Image
+                          src={getFirstImage(listing as ListingWithSeller)}
+                          alt={listing.title}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                        />
+                        <div className="absolute left-2 top-2 rounded-full bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white">
+                          Featured
+                        </div>
+                        {listing.isVerified && (
+                          <div className="absolute right-2 top-2 rounded-full bg-primary p-1.5">
+                            <ShieldCheck className="h-4 w-4 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <CardTitle className="line-clamp-1 text-base">{listing.title}</CardTitle>
+                          <CardDescription className="text-sm">{listing.artist}</CardDescription>
+                        </div>
+                        <p className="font-bold text-primary">${listing.price.toFixed(2)}</p>
+                      </div>
+                      <div className="mb-2 flex flex-wrap gap-2 text-xs">
+                        <Badge variant="secondary" className="text-xs">{listing.type}</Badge>
+                        <Badge variant="outline" className="text-xs">{getConditionLabel(listing.condition)}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>by {listing.seller.name ?? "Anonymous"}</span>
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{listing.views}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </StaggeredGrid>
+          </div>
+        </section>
+      )}
+
+      {/* Latest Listings Section */}
+      {latestListings.length > 0 && (
+        <section className="border-t py-20">
+          <div className="container mx-auto px-4">
+            <div className="mb-12 flex items-end justify-between">
+              <div>
+                <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                  Latest Listings
+                </h2>
+                <p className="text-lg text-muted-foreground">
+                  Fresh arrivals from our community of trusted sellers
+                </p>
+              </div>
+              <Button variant="outline" asChild className="hidden sm:inline-flex">
+                <Link href="/listings" className="gap-2">
+                  View All <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+
+            <StaggeredGrid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {latestListings.map((listing) => (
+                <Link key={listing.id} href={`/listings/${listing.id}`}>
+                  <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg py-0 gap-0">
+                    <CardHeader className="p-0">
+                      <div className="relative aspect-square overflow-hidden">
+                        <Image
+                          src={getFirstImage(listing as ListingWithSeller)}
+                          alt={listing.title}
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                        />
+                        {listing.isVerified && (
+                          <div className="absolute right-2 top-2 rounded-full bg-primary p-1.5">
+                            <ShieldCheck className="h-4 w-4 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <CardTitle className="line-clamp-1 text-base">{listing.title}</CardTitle>
+                          <CardDescription className="text-sm">{listing.artist}</CardDescription>
+                        </div>
+                        <p className="font-bold text-primary">${listing.price.toFixed(2)}</p>
+                      </div>
+                      <div className="mb-2 flex flex-wrap gap-2 text-xs">
+                        <Badge variant="secondary" className="text-xs">{listing.type}</Badge>
+                        <Badge variant="outline" className="text-xs">{getConditionLabel(listing.condition)}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>by {listing.seller.name ?? "Anonymous"}</span>
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{listing.views}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </StaggeredGrid>
+
+            <div className="mt-8 text-center sm:hidden">
+              <Button variant="outline" asChild>
+                <Link href="/listings" className="gap-2">
+                  View All Listings <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Call to Action Section */}
       <section className="border-t bg-gradient-to-b from-primary/5 to-background py-20">

@@ -22,9 +22,10 @@ export async function POST(request: Request) {
       year?: number;
       genre?: string;
       label?: string;
+      tracklist?: Array<{ side: string; tracks: string[] }>;
     };
 
-    const { title, artist, description, type, condition, price, images, year, genre, label } = body;
+    const { title, artist, description, type, condition, price, images, year, genre, label, tracklist } = body;
 
     // Validation
     if (!title || !artist || !description || !type || !condition || !price) {
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
         year,
         genre,
         label,
+        tracklist: tracklist ? JSON.stringify(tracklist) : null,
         sellerId: user.id,
       },
     });

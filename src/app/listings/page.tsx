@@ -11,6 +11,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { ConditionGradingGuide } from "@/components/ConditionGradingGuide";
+import { ListingBadges } from "@/components/ListingBadges";
 
 interface Listing {
   id: string;
@@ -32,6 +34,8 @@ interface Listing {
   priceLabel: string | null;
   pricePercentage: number | null;
   priceDataUpdated: string | null;
+  isPromoted: boolean;
+  createdAt: string;
   seller: {
     name: string | null;
   };
@@ -142,7 +146,14 @@ export default function ListingsPage() {
     }
   };
 
-  const filteredListings = listings.filter((listing) => {
+  // Sort promoted listings first, then by recency
+  const sortedListings = [...listings].sort((a, b) => {
+    if (a.isPromoted && !b.isPromoted) return -1;
+    if (!a.isPromoted && b.isPromoted) return 1;
+    return 0; // preserve original order (already sorted by createdAt desc from API)
+  });
+
+  const filteredListings = sortedListings.filter((listing) => {
     // Search filter
     const matchesSearch =
       listing.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -266,7 +277,10 @@ export default function ListingsPage() {
 
                 {/* Condition Filter */}
                 <div>
-                  <h3 className="mb-3 font-semibold">Condition</h3>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="font-semibold">Condition</h3>
+                    <ConditionGradingGuide />
+                  </div>
                   <div className="space-y-2">
                     {conditions.map((condition) => (
                       <div key={condition} className="flex items-center space-x-2">
@@ -367,7 +381,10 @@ export default function ListingsPage() {
 
                     {/* Condition Filter */}
                     <div>
-                      <h3 className="mb-3 font-semibold">Condition</h3>
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="font-semibold">Condition</h3>
+                        <ConditionGradingGuide />
+                      </div>
                       <div className="space-y-2">
                         {conditions.map((condition) => (
                           <div key={`mobile-condition-${condition}`} className="flex items-center space-x-2">
@@ -541,6 +558,14 @@ export default function ListingsPage() {
                               })()}
                             </div>
                           </div>
+
+                          <ListingBadges
+                            isVerified={listing.isVerified}
+                            isPromoted={listing.isPromoted}
+                            priceLabel={listing.priceLabel}
+                            createdAt={listing.createdAt}
+                            className="mb-2"
+                          />
 
                           <div className="mb-2 flex flex-wrap gap-2 text-xs">
                             <span className="rounded-full bg-primary/10 px-2 py-1 text-primary">

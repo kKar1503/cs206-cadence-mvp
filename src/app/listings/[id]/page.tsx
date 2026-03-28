@@ -29,8 +29,11 @@ import {
   TrendingUp,
   Minus,
   Info,
+  Megaphone,
 } from "lucide-react";
 import { getScoringLabels } from "@/lib/scoring-labels";
+import { ConditionGradingGuide } from "@/components/ConditionGradingGuide";
+import { ListingBadges } from "@/components/ListingBadges";
 
 interface Seller {
   id: string;
@@ -83,10 +86,16 @@ interface Listing {
   labelConditionScore: number | null;
   edgesScore: number | null;
   conditionNotes: string | null;
+  authenticityJustifications: string | null;
+  conditionJustifications: string | null;
+  tracklist: string | null;
+  isPromoted: boolean;
   createdAt: string;
   seller: Seller;
   platformPrices?: PlatformPrice[];
 }
+
+type Justifications = Record<string, string | undefined>;
 
 interface RelatedListing {
   id: string;
@@ -223,6 +232,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
   const [showAuthenticityDetails, setShowAuthenticityDetails] = useState(false);
   const [showConditionDetails, setShowConditionDetails] = useState(false);
   const [showPriceDetails, setShowPriceDetails] = useState(false);
+  const [isPromoting, setIsPromoting] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -338,7 +348,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Back */}
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/listings")}
           className="mb-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -507,24 +517,32 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     <div className="space-y-3">
                       {(() => {
                         const labels = getScoringLabels(listing.type);
+                        const justifications: Justifications = listing.authenticityJustifications
+                          ? JSON.parse(listing.authenticityJustifications) as Justifications
+                          : {};
                         const items = [
-                          { label: labels.authenticity.labelMatch, score: listing.labelMatchScore },
-                          { label: labels.authenticity.matrixNumber, score: listing.matrixNumberScore },
-                          { label: labels.authenticity.typography, score: listing.typographyScore },
-                          { label: labels.authenticity.serialRange, score: listing.serialRangeScore },
+                          { label: labels.authenticity.labelMatch, score: listing.labelMatchScore, justification: justifications.labelMatch },
+                          { label: labels.authenticity.matrixNumber, score: listing.matrixNumberScore, justification: justifications.matrixNumber },
+                          { label: labels.authenticity.typography, score: listing.typographyScore, justification: justifications.typography },
+                          { label: labels.authenticity.serialRange, score: listing.serialRangeScore, justification: justifications.serialRange },
                         ];
-                        return items.map(({ label, score }) => score !== null && (
-                          <div key={label} className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">{label}</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${score}%` }}
-                              />
+                        return items.map(({ label, score, justification }) => score !== null && (
+                          <div key={label}>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm min-w-[120px]">{label}</span>
+                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary"
+                                  style={{ width: `${score}%` }}
+                                />
+                              </div>
+                              <span className={`text-sm font-semibold min-w-[50px] text-right ${score >= 70 ? "text-green-600" : "text-orange-600"}`}>
+                                {score >= 90 ? "Pass" : score >= 70 ? "Partial" : "Fail"}
+                              </span>
                             </div>
-                            <span className={`text-sm font-semibold min-w-[50px] text-right ${score >= 70 ? "text-green-600" : "text-orange-600"}`}>
-                              {score >= 90 ? "Pass" : score >= 70 ? "Partial" : "Fail"}
-                            </span>
+                            {justification && (
+                              <p className="mt-1 ml-[132px] text-xs text-muted-foreground">{justification}</p>
+                            )}
                           </div>
                         ));
                       })()}
@@ -580,24 +598,32 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     <div className="space-y-3">
                       {(() => {
                         const labels = getScoringLabels(listing.type);
+                        const justifications: Justifications = listing.conditionJustifications
+                          ? JSON.parse(listing.conditionJustifications) as Justifications
+                          : {};
                         const items = [
-                          { label: labels.condition.surface, score: listing.vinylSurfaceScore },
-                          { label: labels.condition.sleeve, score: listing.sleeveScore },
-                          { label: labels.condition.label, score: listing.labelConditionScore },
-                          { label: labels.condition.edges, score: listing.edgesScore },
+                          { label: labels.condition.surface, score: listing.vinylSurfaceScore, justification: justifications.surface },
+                          { label: labels.condition.sleeve, score: listing.sleeveScore, justification: justifications.sleeve },
+                          { label: labels.condition.label, score: listing.labelConditionScore, justification: justifications.label },
+                          { label: labels.condition.edges, score: listing.edgesScore, justification: justifications.edges },
                         ];
-                        return items.map(({ label, score }) => score !== null && (
-                          <div key={label} className="flex items-center gap-3">
-                            <span className="text-sm min-w-[120px]">{label}</span>
-                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-primary"
-                                style={{ width: `${score}%` }}
-                              />
+                        return items.map(({ label, score, justification }) => score !== null && (
+                          <div key={label}>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm min-w-[120px]">{label}</span>
+                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-primary"
+                                  style={{ width: `${score}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
+                                {score}
+                              </span>
                             </div>
-                            <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                              {score}
-                            </span>
+                            {justification && (
+                              <p className="mt-1 ml-[132px] text-xs text-muted-foreground">{justification}</p>
+                            )}
                           </div>
                         ));
                       })()}
@@ -653,8 +679,16 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     <p className="max-w-xs">{getConditionDescription(listing.condition)}</p>
                   </TooltipContent>
                 </Tooltip>
+                <ConditionGradingGuide />
                 {listing.isSold && <Badge variant="destructive">Sold</Badge>}
               </div>
+              <ListingBadges
+                isVerified={listing.isVerified}
+                isPromoted={listing.isPromoted}
+                priceLabel={listing.priceLabel}
+                createdAt={listing.createdAt}
+                className="mt-2"
+              />
               <h1 className="text-3xl font-bold leading-tight">{listing.title}</h1>
               <p className="mt-1 text-xl text-muted-foreground">{listing.artist}</p>
               <p className="mt-4 text-4xl font-bold text-primary">${listing.price.toFixed(2)}</p>
@@ -811,16 +845,86 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               </p>
             </div>
 
+            {/* Tracklist */}
+            {listing.tracklist && (() => {
+              try {
+                const tracks = JSON.parse(listing.tracklist) as Array<{ side: string; tracks: string[] }>;
+                if (tracks.length === 0) return null;
+                return (
+                  <div>
+                    <h3 className="mb-3 font-semibold flex items-center gap-2">
+                      <Music className="h-4 w-4" />
+                      Tracklist
+                    </h3>
+                    <div className="space-y-4">
+                      {tracks.map((side, sideIndex) => (
+                        <div key={sideIndex}>
+                          <p className="mb-2 text-sm font-semibold text-primary">
+                            {side.side}
+                          </p>
+                          <ol className="space-y-1 pl-4">
+                            {side.tracks.map((track, trackIndex) => (
+                              <li key={trackIndex} className="flex items-baseline gap-2 text-sm text-muted-foreground">
+                                <span className="text-xs font-medium text-muted-foreground/60 min-w-[20px]">
+                                  {trackIndex + 1}.
+                                </span>
+                                {track}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              } catch {
+                return null;
+              }
+            })()}
+
             <Separator />
 
             {/* Action buttons */}
             {session?.user?.id === listing.seller.id ? (
-              // Owner view - Edit listing button
+              // Owner view - Edit and Promote buttons
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" className="flex-1 gap-2" onClick={() => router.push(`/listings/${listing.id}/edit`)}>
                   <Edit className="h-5 w-5" />
                   Edit Listing
                 </Button>
+                {!listing.isPromoted ? (
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="flex-1 gap-2"
+                    disabled={isPromoting}
+                    onClick={async () => {
+                      setIsPromoting(true);
+                      try {
+                        const res = await fetch(`/api/listings/${listing.id}/promote`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ days: 7 }),
+                        });
+                        if (res.ok) {
+                          setListing({ ...listing, isPromoted: true });
+                        }
+                      } catch (err) {
+                        console.error("Failed to promote:", err);
+                      } finally {
+                        setIsPromoting(false);
+                      }
+                    }}
+                  >
+                    <Megaphone className="h-5 w-5" />
+                    {isPromoting ? "Promoting..." : "Promote Listing"}
+                  </Button>
+                ) : (
+                  <Button size="lg" variant="outline" className="flex-1 gap-2" disabled>
+                    <Megaphone className="h-5 w-5" />
+                    Promoted
+                  </Button>
+                )}
               </div>
             ) : !listing.isSold ? (
               // Buyer view - Buy, Chat, and Favorite buttons

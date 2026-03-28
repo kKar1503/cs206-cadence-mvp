@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Image as ImageIcon } from "lucide-react";
+import { X, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 const LISTING_TYPES = ["VINYL", "CD", "CASSETTE", "MERCH", "EQUIPMENT"];
@@ -39,6 +39,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
   const [error, setError] = useState("");
   const [images, setImages] = useState<ImageUpload[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [tracklist, setTracklist] = useState<Array<{ side: string; tracks: string[] }>>([]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -70,6 +71,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
           genre: string | null;
           label: string | null;
           images: string;
+          tracklist: string | null;
           sellerId: string;
         }};
 
@@ -101,6 +103,15 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
           setExistingImages([]);
         }
 
+        // Parse existing tracklist
+        if (listing.tracklist) {
+          try {
+            setTracklist(JSON.parse(listing.tracklist) as Array<{ side: string; tracks: string[] }>);
+          } catch {
+            setTracklist([]);
+          }
+        }
+
         setIsLoading(false);
       } catch (err) {
         console.error(err);
@@ -113,6 +124,42 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
       void loadListing();
     }
   }, [id, session, router]);
+
+  const addTracklistSide = () => {
+    const isVinyl = formData.type === "VINYL" || formData.type === "CASSETTE";
+    const defaultSide = isVinyl
+      ? tracklist.length === 0 ? "A" : tracklist.length === 1 ? "B" : `Side ${tracklist.length + 1}`
+      : `Disc ${tracklist.length + 1}`;
+    setTracklist([...tracklist, { side: defaultSide, tracks: [""] }]);
+  };
+
+  const removeTracklistSide = (sideIndex: number) => {
+    setTracklist(tracklist.filter((_, i) => i !== sideIndex));
+  };
+
+  const addTrack = (sideIndex: number) => {
+    const updated = [...tracklist];
+    updated[sideIndex]!.tracks.push("");
+    setTracklist(updated);
+  };
+
+  const removeTrack = (sideIndex: number, trackIndex: number) => {
+    const updated = [...tracklist];
+    updated[sideIndex]!.tracks = updated[sideIndex]!.tracks.filter((_, i) => i !== trackIndex);
+    setTracklist(updated);
+  };
+
+  const updateTrack = (sideIndex: number, trackIndex: number, value: string) => {
+    const updated = [...tracklist];
+    updated[sideIndex]!.tracks[trackIndex] = value;
+    setTracklist(updated);
+  };
+
+  const updateSideName = (sideIndex: number, value: string) => {
+    const updated = [...tracklist];
+    updated[sideIndex] = { ...updated[sideIndex]!, side: value };
+    setTracklist(updated);
+  };
 
   // Redirect if not authenticated
   if (status === "loading" || isLoading) {
@@ -252,6 +299,14 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
       // Combine existing and new images
       const allImages = [...existingImages, ...newImageUrls];
 
+      // Filter out empty tracks from tracklist
+      const cleanedTracklist = tracklist
+        .map((side) => ({
+          ...side,
+          tracks: side.tracks.filter((t) => t.trim() !== ""),
+        }))
+        .filter((side) => side.tracks.length > 0);
+
       // Update listing
       const response = await fetch(`/api/listings/${id}`, {
         method: "PATCH",
@@ -261,6 +316,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
           price: parseFloat(formData.price),
           year: formData.year ? parseInt(formData.year) : undefined,
           images: allImages,
+          tracklist: cleanedTracklist.length > 0 ? cleanedTracklist : null,
         }),
       });
 
@@ -572,6 +628,92 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
                   />
                 </div>
               </div>
+
+              {/* Tracklist */}
+              {(formData.type === "VINYL" || formData.type === "CD" || formData.type === "CASSETTE") && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Tracklist</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTracklistSide}
+                      disabled={isSubmitting}
+                    >
+                      <Plus className="mr-1 h-4 w-4" />
+                      {formData.type === "VINYL" || formData.type === "CASSETTE" ? "Add Side" : "Add Disc"}
+                    </Button>
+                  </div>
+
+                  {tracklist.length === 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      Add a tracklist to help buyers know what&apos;s included.
+                    </p>
+                  )}
+
+                  {tracklist.map((side, sideIndex) => (
+                    <div key={sideIndex} className="rounded-lg border p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={side.side}
+                          onChange={(e) => updateSideName(sideIndex, e.target.value)}
+                          className="w-32 font-semibold"
+                          placeholder="Side name"
+                          disabled={isSubmitting}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeTracklistSide(sideIndex)}
+                          disabled={isSubmitting}
+                          className="ml-auto text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {side.tracks.map((track, trackIndex) => (
+                        <div key={trackIndex} className="flex items-center gap-2 pl-4">
+                          <span className="text-xs text-muted-foreground w-6">{trackIndex + 1}.</span>
+                          <Input
+                            value={track}
+                            onChange={(e) => updateTrack(sideIndex, trackIndex, e.target.value)}
+                            placeholder={`Track ${trackIndex + 1}`}
+                            className="flex-1"
+                            disabled={isSubmitting}
+                          />
+                          {side.tracks.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeTrack(sideIndex, trackIndex)}
+                              disabled={isSubmitting}
+                              className="text-muted-foreground hover:text-destructive px-2"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => addTrack(sideIndex)}
+                        disabled={isSubmitting}
+                        className="ml-4 text-xs"
+                      >
+                        <Plus className="mr-1 h-3 w-3" />
+                        Add Track
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Error Message */}
               {error && (
