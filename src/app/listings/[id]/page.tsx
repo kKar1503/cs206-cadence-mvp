@@ -537,7 +537,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                                 />
                               </div>
                               <span className={`text-sm font-semibold min-w-[50px] text-right ${score >= 70 ? "text-green-600" : "text-orange-600"}`}>
-                                {score >= 90 ? "Pass" : score >= 70 ? "Partial" : "Fail"}
+                                {score}%
                               </span>
                             </div>
                             {justification && (
@@ -617,8 +617,8 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                                   style={{ width: `${score}%` }}
                                 />
                               </div>
-                              <span className="text-sm font-semibold text-green-600 min-w-[50px] text-right">
-                                {score}
+                              <span className={`text-sm font-semibold min-w-[50px] text-right ${score >= 70 ? "text-green-600" : "text-orange-600"}`}>
+                                {score}%
                               </span>
                             </div>
                             {justification && (
