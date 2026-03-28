@@ -41,3 +41,29 @@ export async function notifyFavoriters(
     })),
   });
 }
+
+/**
+ * Notify all followers of a user about a new listing.
+ */
+export async function notifyFollowers(
+  sellerId: string,
+  sellerName: string,
+  listingId: string,
+  listingTitle: string,
+) {
+  const followers = await db.follow.findMany({
+    where: { followingId: sellerId },
+    select: { followerId: true },
+  });
+
+  if (followers.length === 0) return;
+
+  return db.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerId,
+      type: "NEW_LISTING_FROM_FOLLOWED" as NotificationType,
+      message: `${sellerName} listed a new item: "${listingTitle}"`,
+      listingId,
+    })),
+  });
+}

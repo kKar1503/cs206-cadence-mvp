@@ -19,6 +19,7 @@ import {
   Heart,
   RefreshCw,
   CheckCircle2,
+  Package,
 } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ const typeIcons: Record<string, React.ReactNode> = {
   PRICE_CHANGED: <DollarSign className="h-4 w-4 text-amber-600" />,
   LISTING_UPDATED: <RefreshCw className="h-4 w-4 text-blue-500" />,
   NEW_FAVORITE: <Heart className="h-4 w-4 text-red-500" />,
+  NEW_LISTING_FROM_FOLLOWED: <Package className="h-4 w-4 text-primary" />,
 };
 
 export function NotificationBell() {

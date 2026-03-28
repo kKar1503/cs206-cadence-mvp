@@ -35,6 +35,8 @@ model User {
     conversationsReceived Conversation[] @relation("ConversationUser2")
     savedCards            SavedCard[]
     notifications         Notification[]
+    following             Follow[]       @relation("Follower")
+    followers             Follow[]       @relation("Following")
 }
 
 // WARNING: This model stores raw card details in plaintext.
@@ -290,6 +292,20 @@ enum NotificationType {
     PRICE_CHANGED
     LISTING_UPDATED
     NEW_FAVORITE
+    NEW_LISTING_FROM_FOLLOWED
+}
+
+model Follow {
+    id          String   @id @default(cuid())
+    follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+    followerId  String
+    following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+    followingId String
+    createdAt   DateTime @default(now())
+
+    @@unique([followerId, followingId])
+    @@index([followerId])
+    @@index([followingId])
 }
 
 model Notification {

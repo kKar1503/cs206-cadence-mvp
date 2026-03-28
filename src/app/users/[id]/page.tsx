@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Star, AlertCircle, ShieldCheck, Eye, ChevronRight,
-  Pencil, Check, X, KeyRound, Loader2,
+  Pencil, Check, X, KeyRound, Loader2, UserPlus, UserCheck,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -126,6 +126,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
+  // Follow state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
+
   useEffect(() => {
     const fetchAll = async () => {
       try {
@@ -147,6 +152,14 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
           const reviewData = await reviewsRes.json() as { reviews: Review[]; stats: SellerStats };
           setReviews(reviewData.reviews);
           setStats(reviewData.stats);
+        }
+
+        // Fetch follow status
+        const followRes = await fetch(`/api/follow?userId=${id}`);
+        if (followRes.ok) {
+          const followData = await followRes.json() as { isFollowing: boolean; followerCount: number };
+          setIsFollowing(followData.isFollowing);
+          setFollowerCount(followData.followerCount);
         }
       } catch {
         setError("Failed to load profile.");
@@ -220,6 +233,31 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
       setPasswordError("Failed to change password.");
     } finally {
       setPasswordLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await fetch(`/api/follow?userId=${id}`, { method: "DELETE" });
+        setIsFollowing(false);
+        setFollowerCount((c) => Math.max(0, c - 1));
+      } else {
+        const res = await fetch("/api/follow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: id }),
+        });
+        if (res.ok) {
+          setIsFollowing(true);
+          setFollowerCount((c) => c + 1);
+        }
+      }
+    } catch (err) {
+      console.error("Follow toggle error:", err);
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -325,12 +363,36 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            {/* Own profile badge */}
-            {isOwnProfile && (
-              <Badge variant="secondary" className="shrink-0 self-start sm:self-center">
-                Your profile
-              </Badge>
-            )}
+            {/* Follow button or own profile badge */}
+            <div className="shrink-0 self-start sm:self-center flex items-center gap-2">
+              {isOwnProfile ? (
+                <Badge variant="secondary">Your profile</Badge>
+              ) : session?.user?.id ? (
+                <Button
+                  variant={isFollowing ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => void handleFollowToggle()}
+                  disabled={followLoading}
+                >
+                  {isFollowing ? (
+                    <>
+                      <UserCheck className="mr-1.5 h-4 w-4" />
+                      Following
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="mr-1.5 h-4 w-4" />
+                      Follow
+                    </>
+                  )}
+                </Button>
+              ) : null}
+              {followerCount > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {followerCount} follower{followerCount !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
