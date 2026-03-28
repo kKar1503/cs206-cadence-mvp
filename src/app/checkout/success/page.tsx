@@ -38,6 +38,7 @@ function SuccessContent() {
   const listingId = searchParams.get("listingId");
   const orderNumber = searchParams.get("orderNumber") ?? `ORD-${Date.now().toString().slice(-8)}`;
   const shippingCost = searchParams.get("shippingCost") ? parseFloat(searchParams.get("shippingCost")!) : null;
+  const buyerFee = searchParams.get("buyerFee") ? parseFloat(searchParams.get("buyerFee")!) : null;
   const shippingEstimate = searchParams.get("shippingEstimate");
   const [listing, setListing] = useState<Listing | null>(null);
   const [rating, setRating] = useState(0);
@@ -128,9 +129,10 @@ function SuccessContent() {
                         <p className="text-sm text-muted-foreground">
                           Item: ${listing.price.toFixed(2)}
                           {shippingCost != null && ` + Shipping: S$${shippingCost.toFixed(2)}`}
+                          {buyerFee != null && buyerFee > 0 && ` + Fee: $${buyerFee.toFixed(2)}`}
                         </p>
                         <p className="text-lg font-semibold">
-                          Total: ${(listing.price + (shippingCost ?? 0)).toFixed(2)}
+                          Total: ${(listing.price + (shippingCost ?? 0) + (buyerFee ?? 0)).toFixed(2)}
                         </p>
                       </div>
                     </div>

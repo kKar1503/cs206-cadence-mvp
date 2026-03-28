@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, AlertTriangle, ShieldAlert, CreditCard, Lock, AlertCircle, MapPin, Truck } from "lucide-react";
+import { ShieldCheck, AlertTriangle, ShieldAlert, CreditCard, Lock, AlertCircle, MapPin, Truck, Info } from "lucide-react";
+import { calculateFees, PLATFORM_FEE_RATE } from "@/lib/fees";
 
 type Listing = {
   id: string;
@@ -336,6 +337,10 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
           listingId,
           orderNumber,
           shippingCost: shippingInfo?.cost ?? 0,
+          platformFee: fees.platformFee,
+          buyerFee: fees.buyerFee,
+          sellerFee: fees.sellerFee,
+          sellerPayout: fees.sellerPayout,
           shippingAddress1: shippingAddress1.trim(),
           shippingAddress2: shippingAddress2.trim() || undefined,
           shippingFloor: shippingFloor.trim() || undefined,
@@ -348,9 +353,10 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
         throw new Error("Failed to create order");
       }
 
-      // Redirect to success page with order number and shipping info
+      // Redirect to success page with order number, shipping info, and fees
       const shippingParam = shippingInfo ? `&shippingCost=${shippingInfo.cost}&shippingEstimate=${encodeURIComponent(shippingInfo.estimate)}` : "";
-      router.push(`/checkout/success?listingId=${listingId}&orderNumber=${orderNumber}${shippingParam}`);
+      const feeParam = `&buyerFee=${fees.buyerFee}`;
+      router.push(`/checkout/success?listingId=${listingId}&orderNumber=${orderNumber}${shippingParam}${feeParam}`);
     } catch (error) {
       console.error("Order creation failed:", error);
       setErrors({ ...errors, submit: "Failed to complete order. Please try again." });
@@ -376,6 +382,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
 
   const cardType = getCardType(cardNumber);
   const verificationScore = listing.authenticityScore ?? 0;
+  const fees = calculateFees(listing.price);
+  const totalAmount = listing.price + (shippingInfo?.cost ?? 0) + fees.buyerFee;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-muted/30 py-8">
@@ -747,7 +755,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
 
                   <Button type="submit" className="w-full" size="lg" disabled={isProcessing || !shippingInfo}>
                     <CreditCard className="mr-2 h-5 w-5" />
-                    {isProcessing ? "Processing..." : `Pay $${(listing.price + (shippingInfo?.cost ?? 0)).toFixed(2)}`}
+                    {isProcessing ? "Processing..." : `Pay $${totalAmount.toFixed(2)}`}
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
@@ -793,12 +801,17 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Platform Fee</span>
-                    <span>$0.00</span>
+                    <span className="flex items-center gap-1">
+                      Platform Fee ({(PLATFORM_FEE_RATE * 100 / 2).toFixed(0)}%)
+                      <span className="text-xs text-muted-foreground" title="Platform charges an 8% fee split equally between buyer and seller">
+                        <Info className="h-3 w-3 inline" />
+                      </span>
+                    </span>
+                    <span>${fees.buyerFee.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg border-t pt-2">
                     <span>Total</span>
-                    <span>${(listing.price + (shippingInfo?.cost ?? 0)).toFixed(2)}</span>
+                    <span>${totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
 

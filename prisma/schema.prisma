@@ -34,6 +34,7 @@ model User {
     conversationsStarted  Conversation[] @relation("ConversationUser1")
     conversationsReceived Conversation[] @relation("ConversationUser2")
     savedCards            SavedCard[]
+    notifications         Notification[]
 }
 
 // WARNING: This model stores raw card details in plaintext.
@@ -200,8 +201,12 @@ model Order {
     seller      User     @relation("OrderSeller", fields: [sellerId], references: [id], onDelete: Cascade)
     sellerId    String
 
-    amount      Float
+    amount      Float    // Total buyer pays (item + shipping + buyer fee)
     shippingCost       Float?
+    platformFee        Float?   // Total platform fee (buyer + seller portions)
+    buyerFee           Float?   // Fee charged to buyer (added to total)
+    sellerFee          Float?   // Fee deducted from seller payout
+    sellerPayout       Float?   // Amount seller receives (item price - seller fee)
     shippingAddress1   String?   // Street address line 1 (auto-filled from OneMap)
     shippingAddress2   String?   // Street address line 2 (optional)
     shippingFloor      String?   // Floor number (optional)
@@ -275,4 +280,32 @@ model Message {
 
     @@index([conversationId])
     @@index([senderId])
+}
+
+enum NotificationType {
+    LISTING_SOLD
+    ORDER_CONFIRMED
+    FAVORITED_LISTING_SOLD
+    LISTING_VERIFIED
+    PRICE_CHANGED
+    LISTING_UPDATED
+    NEW_FAVORITE
+}
+
+model Notification {
+    id        String           @id @default(cuid())
+    type      NotificationType
+    message   String
+    isRead    Boolean          @default(false)
+
+    user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId    String
+
+    listingId String?
+    orderId   String?
+
+    createdAt DateTime         @default(now())
+
+    @@index([userId, isRead])
+    @@index([userId, createdAt])
 }
