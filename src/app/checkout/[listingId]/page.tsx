@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ShieldCheck, AlertTriangle, ShieldAlert, CreditCard, Lock, AlertCircle } from "lucide-react";
+import { ShieldCheck, AlertTriangle, ShieldAlert, CreditCard, Lock, AlertCircle, MapPin, Truck } from "lucide-react";
 
 type Listing = {
   id: string;
@@ -49,6 +49,19 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const [savePayment, setSavePayment] = useState(false);
+  const [savedCardId, setSavedCardId] = useState<string | null>(null);
+  const [usingSavedCard, setUsingSavedCard] = useState(false);
+
+  // Shipping state
+  const [shippingPostalCode, setShippingPostalCode] = useState("");
+  const [shippingInfo, setShippingInfo] = useState<{
+    cost: number;
+    tier: string;
+    estimate: string;
+    distance: number | null;
+    buyerAddress: string | null;
+  } | null>(null);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -83,6 +96,40 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
 
     void fetchListing();
   }, [listingId]);
+
+  // Load saved card if available
+  // NOTE: This loads full card details because the payment system is fake/simulated.
+  // A real system would use tokenized payment methods from Stripe, etc.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const loadSavedCard = async () => {
+      try {
+        const res = await fetch("/api/saved-cards");
+        if (!res.ok) return;
+        const cards = (await res.json()) as Array<{
+          id: string;
+          cardNumber: string;
+          cardName: string;
+          expiryDate: string;
+          cardType: string;
+          last4: string;
+        }>;
+        if (cards.length > 0) {
+          const card = cards[0]!;
+          setSavedCardId(card.id);
+          setCardNumber(formatCardNumber(card.cardNumber));
+          setCardName(card.cardName);
+          setExpiryDate(card.expiryDate);
+          setUsingSavedCard(true);
+        }
+      } catch (err) {
+        console.error("Failed to load saved card:", err);
+      }
+    };
+
+    void loadSavedCard();
+  }, [status]);
 
   const getCardType = (number: string): "visa" | "mastercard" | null => {
     const cleaned = number.replace(/\s/g, "");
@@ -135,6 +182,52 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
     }
   };
 
+  const calculateShipping = async (postalCode: string) => {
+    if (!/^\d{6}$/.test(postalCode) || !listingId) return;
+
+    setIsCalculatingShipping(true);
+    setErrors((prev) => ({ ...prev, shipping: "" }));
+
+    try {
+      const res = await fetch("/api/shipping/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buyerPostalCode: postalCode, listingId }),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json()) as { error: string };
+        setErrors((prev) => ({ ...prev, shipping: data.error }));
+        setShippingInfo(null);
+        return;
+      }
+
+      const data = (await res.json()) as {
+        cost: number;
+        tier: string;
+        estimate: string;
+        distance: number | null;
+        buyerAddress: string | null;
+      };
+      setShippingInfo(data);
+    } catch {
+      setErrors((prev) => ({ ...prev, shipping: "Failed to calculate shipping" }));
+      setShippingInfo(null);
+    } finally {
+      setIsCalculatingShipping(false);
+    }
+  };
+
+  const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    setShippingPostalCode(value);
+    if (value.length === 6) {
+      void calculateShipping(value);
+    } else {
+      setShippingInfo(null);
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -178,6 +271,13 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
       newErrors.cvv = "CVV must be 3 or 4 digits";
     }
 
+    // Validate shipping
+    if (shippingPostalCode?.length !== 6) {
+      newErrors.shipping = "Shipping postal code is required";
+    } else if (!shippingInfo) {
+      newErrors.shipping = "Please wait for shipping calculation";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -193,6 +293,24 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
       // Simulate payment processing
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
+      // Save card if checkbox is checked
+      // NOTE: Saving raw card details because this is a fake/simulated payment system.
+      // In production, NEVER store raw card numbers — use Stripe tokens instead.
+      if (savePayment) {
+        const cleanedNumber = cardNumber.replace(/\s/g, "");
+        const cardType = getCardType(cleanedNumber);
+        await fetch("/api/saved-cards", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cardNumber: cleanedNumber,
+            cardName,
+            expiryDate,
+            cardType: cardType ?? "unknown",
+          }),
+        });
+      }
+
       // Generate order number
       const orderNumber = `ORD-${Date.now().toString().slice(-8)}`;
 
@@ -203,6 +321,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
         body: JSON.stringify({
           listingId,
           orderNumber,
+          shippingCost: shippingInfo?.cost ?? 0,
+          shippingAddress: shippingPostalCode,
         }),
       });
 
@@ -210,8 +330,9 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
         throw new Error("Failed to create order");
       }
 
-      // Redirect to success page with order number
-      router.push(`/checkout/success?listingId=${listingId}&orderNumber=${orderNumber}`);
+      // Redirect to success page with order number and shipping info
+      const shippingParam = shippingInfo ? `&shippingCost=${shippingInfo.cost}&shippingEstimate=${encodeURIComponent(shippingInfo.estimate)}` : "";
+      router.push(`/checkout/success?listingId=${listingId}&orderNumber=${orderNumber}${shippingParam}`);
     } catch (error) {
       console.error("Order creation failed:", error);
       setErrors({ ...errors, submit: "Failed to complete order. Please try again." });
@@ -314,6 +435,63 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* Shipping Address */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Shipping Address
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="postalCode">Singapore Postal Code</Label>
+                  <Input
+                    id="postalCode"
+                    type="text"
+                    placeholder="e.g., 520123"
+                    value={shippingPostalCode}
+                    onChange={handlePostalCodeChange}
+                    className={errors.shipping ? "border-red-500" : ""}
+                    maxLength={6}
+                  />
+                  {errors.shipping && (
+                    <p className="text-sm text-red-500">{errors.shipping}</p>
+                  )}
+                </div>
+
+                {isCalculatingShipping && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    Calculating shipping cost...
+                  </div>
+                )}
+
+                {shippingInfo && (
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Truck className="h-4 w-4 text-primary" />
+                      {shippingInfo.tier} Delivery
+                    </div>
+                    {shippingInfo.buyerAddress && (
+                      <p className="text-sm text-muted-foreground">
+                        Ship to: {shippingInfo.buyerAddress}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {shippingInfo.distance != null && `${shippingInfo.distance} km • `}
+                        Est. {shippingInfo.estimate}
+                      </span>
+                      <span className="font-semibold text-primary">
+                        S${shippingInfo.cost.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Payment Form */}
             <Card>
@@ -418,24 +596,52 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
                     </div>
                   </div>
 
-                  {/* Save Payment Checkbox */}
-                  <div className="flex items-center space-x-2 pt-4 border-t">
-                    <Checkbox
-                      id="savePayment"
-                      checked={savePayment}
-                      onCheckedChange={(checked) => setSavePayment(checked === true)}
-                    />
-                    <label
-                      htmlFor="savePayment"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Save payment information for future purchases
-                    </label>
+                  {/* Save Payment Checkbox / Saved Card Info */}
+                  <div className="pt-4 border-t space-y-2">
+                    {usingSavedCard && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          Using saved card ending in {cardNumber.slice(-4)}
+                        </span>
+                        <button
+                          type="button"
+                          className="text-primary hover:underline text-sm"
+                          onClick={async () => {
+                            if (savedCardId) {
+                              await fetch(`/api/saved-cards?id=${savedCardId}`, { method: "DELETE" });
+                            }
+                            setCardNumber("");
+                            setCardName("");
+                            setExpiryDate("");
+                            setCvv("");
+                            setUsingSavedCard(false);
+                            setSavedCardId(null);
+                          }}
+                        >
+                          Use a different card
+                        </button>
+                      </div>
+                    )}
+                    {!usingSavedCard && (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="savePayment"
+                          checked={savePayment}
+                          onCheckedChange={(checked) => setSavePayment(checked === true)}
+                        />
+                        <label
+                          htmlFor="savePayment"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Save payment information for future purchases
+                        </label>
+                      </div>
+                    )}
                   </div>
 
-                  <Button type="submit" className="w-full" size="lg" disabled={isProcessing}>
+                  <Button type="submit" className="w-full" size="lg" disabled={isProcessing || !shippingInfo}>
                     <CreditCard className="mr-2 h-5 w-5" />
-                    {isProcessing ? "Processing..." : `Pay $${listing.price.toFixed(2)}`}
+                    {isProcessing ? "Processing..." : `Pay $${(listing.price + (shippingInfo?.cost ?? 0)).toFixed(2)}`}
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
@@ -473,12 +679,20 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
                     <span>${listing.price.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
+                    <span>Shipping</span>
+                    <span>
+                      {shippingInfo
+                        ? `S$${shippingInfo.cost.toFixed(2)}`
+                        : "Enter postal code"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
                     <span>Platform Fee</span>
                     <span>$0.00</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg border-t pt-2">
                     <span>Total</span>
-                    <span>${listing.price.toFixed(2)}</span>
+                    <span>${(listing.price + (shippingInfo?.cost ?? 0)).toFixed(2)}</span>
                   </div>
                 </div>
 

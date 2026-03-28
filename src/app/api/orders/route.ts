@@ -59,9 +59,11 @@ export async function POST(request: Request) {
     const body = await request.json() as {
       listingId: string;
       orderNumber: string;
+      shippingCost?: number;
+      shippingAddress?: string;
     };
 
-    const { listingId, orderNumber } = body;
+    const { listingId, orderNumber, shippingCost, shippingAddress } = body;
 
     if (!listingId || !orderNumber) {
       return NextResponse.json(
@@ -102,7 +104,9 @@ export async function POST(request: Request) {
         buyerId: session.user.id,
         listingId: listing.id,
         sellerId: listing.sellerId,
-        amount: listing.price,
+        amount: listing.price + (shippingCost ?? 0),
+        shippingCost: shippingCost ?? null,
+        shippingAddress: shippingAddress ?? null,
         status: "processing",
       },
       include: {

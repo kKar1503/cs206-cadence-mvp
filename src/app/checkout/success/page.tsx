@@ -37,6 +37,8 @@ function SuccessContent() {
   const { data: session } = useSession();
   const listingId = searchParams.get("listingId");
   const orderNumber = searchParams.get("orderNumber") ?? `ORD-${Date.now().toString().slice(-8)}`;
+  const shippingCost = searchParams.get("shippingCost") ? parseFloat(searchParams.get("shippingCost")!) : null;
+  const shippingEstimate = searchParams.get("shippingEstimate");
   const [listing, setListing] = useState<Listing | null>(null);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -122,7 +124,15 @@ function SuccessContent() {
                     <div className="flex-1">
                       <h3 className="font-medium">{listing.title}</h3>
                       <p className="text-sm text-muted-foreground">{listing.artist}</p>
-                      <p className="text-lg font-semibold mt-2">${listing.price.toFixed(2)}</p>
+                      <div className="mt-2 space-y-0.5">
+                        <p className="text-sm text-muted-foreground">
+                          Item: ${listing.price.toFixed(2)}
+                          {shippingCost != null && ` + Shipping: S$${shippingCost.toFixed(2)}`}
+                        </p>
+                        <p className="text-lg font-semibold">
+                          Total: ${(listing.price + (shippingCost ?? 0)).toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -215,7 +225,7 @@ function SuccessContent() {
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
                       <span>
-                        Estimated delivery: 5-7 business days (tracking info will be provided)
+                        Estimated delivery: {shippingEstimate ?? "5-7 business days"} (tracking info will be provided)
                       </span>
                     </li>
                   </ul>
