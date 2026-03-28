@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
+import { createNotification } from "@/lib/notifications";
 
 // GET /api/favorites - Get user's favorite listings
 export async function GET() {
@@ -96,6 +97,16 @@ export async function POST(request: Request) {
         listingId,
       },
     });
+
+    // Notify the seller (fire-and-forget, skip if user favorites own listing)
+    if (listing.sellerId !== session.user.id) {
+      createNotification({
+        userId: listing.sellerId,
+        type: "NEW_FAVORITE",
+        message: `Someone favorited your listing "${listing.title}"!`,
+        listingId,
+      }).catch(console.error);
+    }
 
     return NextResponse.json(favorite, { status: 201 });
   } catch (error) {

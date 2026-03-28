@@ -5,6 +5,7 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { openai, type AuthenticityResult, type ConditionResult } from "@/lib/openai";
 import { getScoringLabels } from "@/lib/scoring-labels";
+import { createNotification } from "@/lib/notifications";
 import type { ChatCompletionContentPart } from "openai/resources/chat/completions";
 
 interface VerifyRequestBody {
@@ -313,6 +314,14 @@ export async function POST(
         });
       }
     }
+
+    // Notify seller that verification is complete
+    createNotification({
+      userId: existing.sellerId,
+      type: "LISTING_VERIFIED",
+      message: `Your listing "${existing.title}" has been AI verified with a ${authenticity.authenticityScore.toFixed(0)}% authenticity score!`,
+      listingId: id,
+    }).catch(console.error);
 
     return NextResponse.json({
       listing: updatedListing,

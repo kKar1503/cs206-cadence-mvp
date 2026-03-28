@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
+import { notifyFavoriters } from "@/lib/notifications";
 import type { ListingType, Condition } from "@prisma/generated";
 
 export async function GET(
@@ -97,7 +98,7 @@ export async function PATCH(
     // Check if listing exists and user owns it
     const existing = await db.listing.findUnique({
       where: { id },
-      select: { sellerId: true },
+      select: { sellerId: true, price: true, title: true },
     });
 
     if (!existing) {
@@ -125,6 +126,23 @@ export async function PATCH(
         tracklist: body.tracklist ? JSON.stringify(body.tracklist) : null,
       },
     });
+
+    // Notify favoriters of changes (fire-and-forget)
+    if (body.price !== existing.price) {
+      notifyFavoriters(
+        id,
+        session.user.id,
+        "PRICE_CHANGED",
+        `Price changed on "${body.title}" — now $${body.price.toFixed(2)}`,
+      ).catch(console.error);
+    } else {
+      notifyFavoriters(
+        id,
+        session.user.id,
+        "LISTING_UPDATED",
+        `A listing you favorited "${body.title}" was updated`,
+      ).catch(console.error);
+    }
 
     return NextResponse.json({ listing: updatedListing });
   } catch (error) {
