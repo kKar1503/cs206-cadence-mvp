@@ -53,8 +53,11 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
   const [usingSavedCard, setUsingSavedCard] = useState(false);
 
   // Shipping state
-  const [shippingAddress, setShippingAddress] = useState("");
   const [shippingPostalCode, setShippingPostalCode] = useState("");
+  const [shippingAddress1, setShippingAddress1] = useState("");
+  const [shippingAddress2, setShippingAddress2] = useState("");
+  const [shippingFloor, setShippingFloor] = useState("");
+  const [shippingUnit, setShippingUnit] = useState("");
   const [shippingInfo, setShippingInfo] = useState<{
     cost: number;
     tier: string;
@@ -63,6 +66,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
     buyerAddress: string | null;
   } | null>(null);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
+  const [addressAutoFilled, setAddressAutoFilled] = useState(false);
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -183,30 +187,24 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
     }
   };
 
-  const calculateShipping = async () => {
-    if (!shippingPostalCode || !listingId) {
-      setErrors((prev) => ({ ...prev, shipping: "Postal code is required" }));
-      return;
-    }
-    if (!/^\d{6}$/.test(shippingPostalCode)) {
-      setErrors((prev) => ({ ...prev, shipping: "Invalid postal code (must be 6 digits)" }));
-      return;
-    }
+  const lookupPostalCode = async (postalCode: string) => {
+    if (!/^\d{6}$/.test(postalCode) || !listingId) return;
 
     setIsCalculatingShipping(true);
-    setErrors((prev) => ({ ...prev, shipping: "" }));
+    setErrors((prev) => ({ ...prev, postalCode: "" }));
 
     try {
       const res = await fetch("/api/shipping/calculate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ buyerPostalCode: shippingPostalCode, listingId }),
+        body: JSON.stringify({ buyerPostalCode: postalCode, listingId }),
       });
 
       if (!res.ok) {
         const data = (await res.json()) as { error: string };
-        setErrors((prev) => ({ ...prev, shipping: data.error }));
+        setErrors((prev) => ({ ...prev, postalCode: data.error }));
         setShippingInfo(null);
+        setAddressAutoFilled(false);
         return;
       }
 
@@ -216,11 +214,26 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
         estimate: string;
         distance: number | null;
         buyerAddress: string | null;
+        blockNo: string;
+        roadName: string;
+        building: string;
       };
+
       setShippingInfo(data);
+
+      // Auto-fill address fields from OneMap data
+      const streetLine = data.blockNo
+        ? `${data.blockNo} ${data.roadName}`
+        : data.roadName;
+      setShippingAddress1(streetLine);
+      if (data.building) {
+        setShippingAddress2(data.building);
+      }
+      setAddressAutoFilled(true);
     } catch {
-      setErrors((prev) => ({ ...prev, shipping: "Failed to calculate shipping" }));
+      setErrors((prev) => ({ ...prev, postalCode: "Failed to look up postal code" }));
       setShippingInfo(null);
+      setAddressAutoFilled(false);
     } finally {
       setIsCalculatingShipping(false);
     }
@@ -270,13 +283,13 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
     }
 
     // Validate shipping
-    if (!shippingAddress.trim()) {
-      newErrors.shippingAddress = "Shipping address is required";
+    if (!shippingAddress1.trim()) {
+      newErrors.shippingAddress1 = "Street address is required";
     }
     if (shippingPostalCode?.length !== 6) {
-      newErrors.shipping = "Postal code is required (6 digits)";
+      newErrors.postalCode = "Postal code is required (6 digits)";
     } else if (!shippingInfo) {
-      newErrors.shipping = "Please calculate shipping cost first";
+      newErrors.postalCode = "Please enter a valid postal code to calculate shipping";
     }
 
     setErrors(newErrors);
@@ -323,7 +336,11 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
           listingId,
           orderNumber,
           shippingCost: shippingInfo?.cost ?? 0,
-          shippingAddress: `${shippingAddress.trim()}, Singapore ${shippingPostalCode}`,
+          shippingAddress1: shippingAddress1.trim(),
+          shippingAddress2: shippingAddress2.trim() || undefined,
+          shippingFloor: shippingFloor.trim() || undefined,
+          shippingUnit: shippingUnit.trim() || undefined,
+          shippingPostalCode,
         }),
       });
 
@@ -446,24 +463,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="shippingAddress">Address</Label>
-                  <Input
-                    id="shippingAddress"
-                    type="text"
-                    placeholder="e.g., Block 123 Ang Mo Kio Ave 6, #08-1234"
-                    value={shippingAddress}
-                    onChange={(e) => {
-                      setShippingAddress(e.target.value);
-                      if (errors.shippingAddress) setErrors((prev) => ({ ...prev, shippingAddress: "" }));
-                    }}
-                    className={errors.shippingAddress ? "border-red-500" : ""}
-                  />
-                  {errors.shippingAddress && (
-                    <p className="text-sm text-red-500">{errors.shippingAddress}</p>
-                  )}
-                </div>
-
+                {/* Postal Code — entered first, triggers auto-fill */}
                 <div className="space-y-2">
                   <Label htmlFor="postalCode">Postal Code</Label>
                   <div className="flex gap-2">
@@ -475,53 +475,126 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
                       onChange={(e) => {
                         const value = e.target.value.replace(/\D/g, "").slice(0, 6);
                         setShippingPostalCode(value);
-                        if (errors.shipping) setErrors((prev) => ({ ...prev, shipping: "" }));
-                        // Reset shipping info when postal code changes
-                        if (shippingInfo) setShippingInfo(null);
+                        if (errors.postalCode) setErrors((prev) => ({ ...prev, postalCode: "" }));
+                        // Reset when postal code changes
+                        if (shippingInfo) {
+                          setShippingInfo(null);
+                          setAddressAutoFilled(false);
+                        }
                       }}
-                      className={errors.shipping ? "border-red-500" : ""}
+                      className={`max-w-[140px] ${errors.postalCode ? "border-red-500" : ""}`}
                       maxLength={6}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => void calculateShipping()}
-                      disabled={isCalculatingShipping || shippingPostalCode.length !== 6}
-                    >
-                      {isCalculatingShipping ? (
+                    {shippingPostalCode.length === 6 && !shippingInfo && !isCalculatingShipping && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void lookupPostalCode(shippingPostalCode)}
+                      >
+                        Look up
+                      </Button>
+                    )}
+                    {isCalculatingShipping && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      ) : (
-                        <Truck className="mr-2 h-4 w-4" />
-                      )}
-                      {isCalculatingShipping ? "Calculating..." : "Calculate Shipping"}
-                    </Button>
+                        Looking up...
+                      </div>
+                    )}
                   </div>
-                  {errors.shipping && (
-                    <p className="text-sm text-red-500">{errors.shipping}</p>
+                  {errors.postalCode && (
+                    <p className="text-sm text-red-500">{errors.postalCode}</p>
                   )}
                 </div>
 
+                {/* Auto-trigger lookup when 6 digits entered */}
+                {shippingPostalCode.length === 6 && !shippingInfo && !isCalculatingShipping && !errors.postalCode && (
+                  <p className="text-xs text-muted-foreground">
+                    Press &quot;Look up&quot; to auto-fill your address and calculate shipping.
+                  </p>
+                )}
+
+                {/* Shipping cost result */}
                 {shippingInfo && (
-                  <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-                    <div className="flex items-center gap-2 font-medium">
-                      <Truck className="h-4 w-4 text-primary" />
-                      {shippingInfo.tier} Delivery
-                    </div>
-                    {shippingInfo.buyerAddress && (
-                      <p className="text-sm text-muted-foreground">
-                        Nearest landmark: {shippingInfo.buyerAddress}
-                      </p>
-                    )}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {shippingInfo.distance != null && `${shippingInfo.distance} km • `}
-                        Est. {shippingInfo.estimate}
-                      </span>
+                  <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm font-medium">
+                        <Truck className="h-4 w-4 text-primary" />
+                        {shippingInfo.tier} Delivery
+                      </div>
                       <span className="font-semibold text-primary">
                         S${shippingInfo.cost.toFixed(2)}
                       </span>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      {shippingInfo.distance != null && `${shippingInfo.distance} km • `}
+                      Est. {shippingInfo.estimate}
+                    </p>
                   </div>
+                )}
+
+                {/* Address fields — shown after postal code lookup */}
+                {addressAutoFilled && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="address1">Street Address</Label>
+                      <Input
+                        id="address1"
+                        type="text"
+                        placeholder="Block and street name"
+                        value={shippingAddress1}
+                        onChange={(e) => {
+                          setShippingAddress1(e.target.value);
+                          if (errors.shippingAddress1) setErrors((prev) => ({ ...prev, shippingAddress1: "" }));
+                        }}
+                        className={errors.shippingAddress1 ? "border-red-500" : ""}
+                      />
+                      {errors.shippingAddress1 && (
+                        <p className="text-sm text-red-500">{errors.shippingAddress1}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="address2">Building / Apartment Name <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                      <Input
+                        id="address2"
+                        type="text"
+                        placeholder="e.g., The Pinnacle @ Duxton"
+                        value={shippingAddress2}
+                        onChange={(e) => setShippingAddress2(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="floor">Floor <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                        <Input
+                          id="floor"
+                          type="text"
+                          placeholder="e.g., 08"
+                          value={shippingFloor}
+                          onChange={(e) => setShippingFloor(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="unit">Unit <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                        <Input
+                          id="unit"
+                          type="text"
+                          placeholder="e.g., 1234"
+                          value={shippingUnit}
+                          onChange={(e) => setShippingUnit(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Country</Label>
+                        <Input type="text" value="Singapore" disabled className="bg-muted" />
+                      </div>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>

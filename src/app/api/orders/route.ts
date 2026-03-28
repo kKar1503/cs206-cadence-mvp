@@ -60,10 +60,14 @@ export async function POST(request: Request) {
       listingId: string;
       orderNumber: string;
       shippingCost?: number;
-      shippingAddress?: string;
+      shippingAddress1?: string;
+      shippingAddress2?: string;
+      shippingFloor?: string;
+      shippingUnit?: string;
+      shippingPostalCode?: string;
     };
 
-    const { listingId, orderNumber, shippingCost, shippingAddress } = body;
+    const { listingId, orderNumber, shippingCost, shippingAddress1, shippingAddress2, shippingFloor, shippingUnit, shippingPostalCode } = body;
 
     if (!listingId || !orderNumber) {
       return NextResponse.json(
@@ -106,7 +110,11 @@ export async function POST(request: Request) {
         sellerId: listing.sellerId,
         amount: listing.price + (shippingCost ?? 0),
         shippingCost: shippingCost ?? null,
-        shippingAddress: shippingAddress ?? null,
+        shippingAddress1: shippingAddress1 ?? null,
+        shippingAddress2: shippingAddress2 ?? null,
+        shippingFloor: shippingFloor ?? null,
+        shippingUnit: shippingUnit ?? null,
+        shippingPostalCode: shippingPostalCode ?? null,
         status: "processing",
       },
       include: {

@@ -201,8 +201,13 @@ model Order {
     sellerId    String
 
     amount      Float
-    shippingCost    Float?
-    shippingAddress String?   // Buyer's postal code
+    shippingCost       Float?
+    shippingAddress1   String?   // Street address line 1 (auto-filled from OneMap)
+    shippingAddress2   String?   // Street address line 2 (optional)
+    shippingFloor      String?   // Floor number (optional)
+    shippingUnit       String?   // Unit number (optional)
+    shippingPostalCode String?   // Singapore postal code
+    shippingCountry    String?   @default("Singapore")
     status      String   @default("completed") // completed, pending, cancelled
 
     createdAt   DateTime @default(now())

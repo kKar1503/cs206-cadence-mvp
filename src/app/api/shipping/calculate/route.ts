@@ -98,6 +98,10 @@ export async function POST(request: Request) {
       estimate: shipping.estimate,
       distance: Math.round(distance * 10) / 10, // 1 decimal place
       buyerAddress: buyerGeo.address,
+      // Structured address fields from OneMap for auto-fill
+      blockNo: buyerGeo.blockNo,
+      roadName: buyerGeo.roadName,
+      building: buyerGeo.building,
     });
   } catch (error) {
     console.error("Error calculating shipping:", error);

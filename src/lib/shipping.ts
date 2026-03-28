@@ -18,6 +18,10 @@ export interface GeocodingResult {
   lat: number;
   lon: number;
   address: string;
+  blockNo: string;
+  roadName: string;
+  building: string;
+  postalCode: string;
 }
 
 interface OneMapSearchResult {
@@ -25,6 +29,9 @@ interface OneMapSearchResult {
   LONGITUDE: string;
   ADDRESS: string;
   POSTAL: string;
+  BLK_NO: string;
+  ROAD_NAME: string;
+  BUILDING: string;
 }
 
 interface OneMapResponse {
@@ -98,6 +105,10 @@ export async function geocodePostalCode(
       lat: parseFloat(result.LATITUDE),
       lon: parseFloat(result.LONGITUDE),
       address: result.ADDRESS,
+      blockNo: result.BLK_NO,
+      roadName: result.ROAD_NAME,
+      building: result.BUILDING === "NIL" ? "" : result.BUILDING,
+      postalCode: result.POSTAL,
     };
   } catch (error) {
     console.error("OneMap geocoding error:", error);
