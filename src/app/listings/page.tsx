@@ -582,7 +582,6 @@ export default function ListingsPage() {
 
                           <ListingBadges
                             isPromoted={listing.isPromoted}
-                            priceLabel={listing.priceLabel}
                             createdAt={listing.createdAt}
                             className="mb-2"
                           />

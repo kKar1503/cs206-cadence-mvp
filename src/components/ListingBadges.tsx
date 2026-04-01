@@ -1,16 +1,14 @@
 import { Badge } from "@/components/ui/badge";
-import { TrendingDown, Megaphone, Clock } from "lucide-react";
+import { Megaphone, Clock } from "lucide-react";
 
 interface ListingBadgesProps {
   isPromoted?: boolean;
-  priceLabel?: string | null;
   createdAt?: string | Date;
   className?: string;
 }
 
 export function ListingBadges({
   isPromoted,
-  priceLabel,
   createdAt,
   className = "",
 }: ListingBadgesProps) {
@@ -32,20 +30,6 @@ export function ListingBadges({
         </Badge>,
       );
     }
-  }
-
-  // "Great Deal" badge
-  if (priceLabel === "UNDERPRICED") {
-    badges.push(
-      <Badge
-        key="deal"
-        variant="secondary"
-        className="gap-1 bg-green-500/10 text-green-600 border-green-200"
-      >
-        <TrendingDown className="h-3 w-3" />
-        Great Deal
-      </Badge>,
-    );
   }
 
   // "Promoted" badge

@@ -662,7 +662,6 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <ListingBadges
                 isPromoted={listing.isPromoted}
-                priceLabel={listing.priceLabel}
                 createdAt={listing.createdAt}
                 className="mt-2"
               />
