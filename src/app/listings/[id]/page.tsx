@@ -67,9 +67,7 @@ interface Listing {
   genre: string | null;
   label: string | null;
   isVerified: boolean;
-  verifiedByOfficial: boolean;
   authenticityScore: number | null;
-  verificationSource: string | null;
   isSold: boolean;
   views: number;
   priceLabel: string | null;

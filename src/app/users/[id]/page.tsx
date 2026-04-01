@@ -29,7 +29,6 @@ interface UserListing {
   type: string;
   condition: string;
   isVerified: boolean;
-  verifiedByOfficial: boolean;
   views: number;
   createdAt: string;
 }
@@ -438,7 +437,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                           fill
                           className="object-cover transition-transform group-hover:scale-105"
                         />
-                        {listing.verifiedByOfficial && (
+                        {listing.isVerified && (
                           <div className="absolute right-2 top-2 rounded-full bg-primary p-1">
                             <ShieldCheck className="h-3.5 w-3.5 text-primary-foreground" />
                           </div>

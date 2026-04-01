@@ -23,8 +23,6 @@ type Listing = {
   images: string;
   imageUrl: string | null;
   authenticityScore: number | null;
-  verifiedByOfficial: boolean;
-  verificationSource: string | null;
 };
 
 const getFirstImage = (listing: Listing): string => {

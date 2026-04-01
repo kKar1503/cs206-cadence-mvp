@@ -141,8 +141,6 @@ export async function POST(
       data: {
         authenticityScore,
         isVerified,
-        verifiedByOfficial: isInRainbows ? true : undefined,
-        verificationSource: isInRainbows ? "Professional CD Authentication Services" : undefined,
 
         // Authenticity breakdown
         labelMatchScore,

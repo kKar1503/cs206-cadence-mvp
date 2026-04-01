@@ -27,9 +27,7 @@ interface Listing {
   year: number | null;
   genre: string | null;
   isVerified: boolean;
-  verifiedByOfficial: boolean;
   authenticityScore: number | null;
-  verificationSource: string | null;
   views: number;
   priceLabel: string | null;
   pricePercentage: number | null;

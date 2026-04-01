@@ -249,10 +249,6 @@ export async function POST(
       data: {
         authenticityScore: authenticity.authenticityScore,
         isVerified: true,
-        verifiedByOfficial: isInRainbows,
-        verificationSource: isInRainbows
-          ? "Professional CD Authentication Services"
-          : "Cadence AI Verification",
 
         labelMatchScore: authenticity.labelMatchScore,
         matrixNumberScore: authenticity.matrixNumberScore,

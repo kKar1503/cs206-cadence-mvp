@@ -30,7 +30,6 @@ export async function GET(
             type: true,
             condition: true,
             isVerified: true,
-            verifiedByOfficial: true,
             views: true,
             createdAt: true,
           },
