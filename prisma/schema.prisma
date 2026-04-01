@@ -93,9 +93,7 @@ model Listing {
 
     // AI verification fields
     isVerified            Boolean      @default(false)
-    verifiedByOfficial    Boolean      @default(false)
     authenticityScore     Float?       // 0-100 overall authenticity score from AI
-    verificationSource    String?      // Organization that verified (e.g., "Discogs", "Vinyl Authenticators Inc.")
 
     // AI Insights - Authenticity breakdown
     labelMatchScore       Float?       // 0-100 score for label authenticity
