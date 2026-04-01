@@ -661,7 +661,6 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 {listing.isSold && <Badge variant="destructive">Sold</Badge>}
               </div>
               <ListingBadges
-                isPromoted={listing.isPromoted}
                 createdAt={listing.createdAt}
                 className="mt-2"
               />

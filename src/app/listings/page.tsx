@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart, TrendingDown, TrendingUp, Minus, Sparkles } from "lucide-react";
+import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart, TrendingDown, TrendingUp, Minus, Sparkles, Megaphone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ConditionGradingGuide } from "@/components/ConditionGradingGuide";
@@ -528,6 +528,19 @@ export default function ListingsPage() {
                                 </TooltipContent>
                               </Tooltip>
                             )}
+                            {listing.isPromoted && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="absolute left-2 top-2 rounded-full bg-amber-500 p-1.5 cursor-help">
+                                    <Megaphone className="h-4 w-4 text-white" />
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="right">
+                                  <p className="font-semibold">Featured Listing</p>
+                                  <p className="text-xs mt-1">Promoted by the seller</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                           </div>
                         </CardHeader>
                         <CardContent className="p-4">
@@ -581,7 +594,6 @@ export default function ListingsPage() {
                           </div>
 
                           <ListingBadges
-                            isPromoted={listing.isPromoted}
                             createdAt={listing.createdAt}
                             className="mb-2"
                           />

@@ -1,14 +1,12 @@
 import { Badge } from "@/components/ui/badge";
-import { Megaphone, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 interface ListingBadgesProps {
-  isPromoted?: boolean;
   createdAt?: string | Date;
   className?: string;
 }
 
 export function ListingBadges({
-  isPromoted,
   createdAt,
   className = "",
 }: ListingBadgesProps) {
@@ -30,20 +28,6 @@ export function ListingBadges({
         </Badge>,
       );
     }
-  }
-
-  // "Promoted" badge
-  if (isPromoted) {
-    badges.push(
-      <Badge
-        key="promoted"
-        variant="secondary"
-        className="gap-1 bg-amber-500/10 text-amber-600 border-amber-200"
-      >
-        <Megaphone className="h-3 w-3" />
-        Featured
-      </Badge>,
-    );
   }
 
   if (badges.length === 0) return null;
