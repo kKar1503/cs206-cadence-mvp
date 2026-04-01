@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
 
 interface ListingBadgesProps {
@@ -6,31 +5,35 @@ interface ListingBadgesProps {
   className?: string;
 }
 
+function getListingAge(createdAt: string | Date): string {
+  const now = Date.now();
+  const created = new Date(createdAt).getTime();
+  const diffMs = now - created;
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (hours < 1) return "just now";
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 31) return `${days}d ago`;
+
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}m ago`;
+
+  const years = Math.floor(months / 12);
+  return `${years}y ago`;
+}
+
 export function ListingBadges({
   createdAt,
   className = "",
 }: ListingBadgesProps) {
-  const badges: React.ReactNode[] = [];
+  if (!createdAt) return null;
 
-  // "New" badge — listed within 48 hours
-  if (createdAt) {
-    const created = new Date(createdAt);
-    const hoursAgo = (Date.now() - created.getTime()) / (1000 * 60 * 60);
-    if (hoursAgo < 48) {
-      badges.push(
-        <Badge
-          key="new"
-          variant="secondary"
-          className="gap-1 bg-blue-500/10 text-blue-600 border-blue-200"
-        >
-          <Clock className="h-3 w-3" />
-          New
-        </Badge>,
-      );
-    }
-  }
-
-  if (badges.length === 0) return null;
-
-  return <div className={`flex flex-wrap gap-1.5 ${className}`}>{badges}</div>;
+  return (
+    <div className={`flex items-center gap-1 text-xs text-muted-foreground ${className}`}>
+      <Clock className="h-3 w-3" />
+      <span>{getListingAge(createdAt)}</span>
+    </div>
+  );
 }
