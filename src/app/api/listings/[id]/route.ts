@@ -194,3 +194,44 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const listing = await db.listing.findUnique({
+      where: { id },
+      select: { sellerId: true, title: true, isSold: true },
+    });
+
+    if (!listing) {
+      return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+    }
+
+    if (listing.sellerId !== session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (listing.isSold) {
+      return NextResponse.json({ error: "Cannot delete a sold listing" }, { status: 400 });
+    }
+
+    await db.listing.delete({ where: { id } });
+
+    return NextResponse.json({ message: "Listing deleted" });
+  } catch (error) {
+    console.error("Error deleting listing:", error);
+    return NextResponse.json(
+      { error: "Failed to delete listing" },
+      { status: 500 }
+    );
+  }
+}

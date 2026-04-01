@@ -9,6 +9,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { X, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
@@ -35,6 +46,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
   const router = useRouter();
   const { data: session, status } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [images, setImages] = useState<ImageUpload[]>([]);
@@ -331,6 +343,21 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/listings/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json() as { error?: string };
+        throw new Error(data.error ?? "Failed to delete listing");
+      }
+      router.push("/listings");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete listing");
+      setIsDeleting(false);
     }
   };
 
@@ -766,6 +793,44 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
               <span className="mr-2">✨</span>
               {isLoading ? "Loading..." : "Start AI Verification"}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Danger Zone — Delete Listing */}
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-destructive text-lg">Danger Zone</CardTitle>
+            <CardDescription>
+              Permanently delete this listing. This action cannot be undone.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isDeleting}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  {isDeleting ? "Deleting..." : "Delete Listing"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete &quot;{formData.title}&quot;?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete this listing and all associated data
+                    (favorites, reviews, price data). This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => void handleDelete()}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete Permanently
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>
