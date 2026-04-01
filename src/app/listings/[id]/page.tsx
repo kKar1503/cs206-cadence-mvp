@@ -368,9 +368,9 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 className="object-cover"
                 priority
               />
-              {listing.verifiedByOfficial && (
+              {listing.isVerified && (
                 <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Verified
+                  <ShieldCheck className="h-3.5 w-3.5" /> AI Verified
                 </div>
               )}
               {listing.isSold && (
@@ -410,27 +410,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
               </div>
             )}
 
-            {/* Official Verification */}
-            {listing.verifiedByOfficial && listing.verificationSource && (
-              <Card className="border-blue-500/50 bg-blue-50 dark:bg-blue-950/30">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
-                      Officially Verified
-                    </p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Verified by <strong>{listing.verificationSource}</strong>
-                    </p>
-                    <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                      Highest authenticity assurance
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* AI Insights Overview - replaces old AI Verified badge */}
+            {/* AI Insights Overview */}
             {!showAuthenticityDetails && !showConditionDetails && (listing.authenticityScore ?? listing.conditionScore) && (
               <Card className="border-2">
                 <CardHeader className="pb-3">
@@ -683,7 +663,6 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                 {listing.isSold && <Badge variant="destructive">Sold</Badge>}
               </div>
               <ListingBadges
-                isVerified={listing.isVerified}
                 isPromoted={listing.isPromoted}
                 priceLabel={listing.priceLabel}
                 createdAt={listing.createdAt}

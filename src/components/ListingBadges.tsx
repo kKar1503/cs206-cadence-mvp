@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, TrendingDown, Megaphone, Clock } from "lucide-react";
+import { TrendingDown, Megaphone, Clock } from "lucide-react";
 
 interface ListingBadgesProps {
-  isVerified?: boolean;
   isPromoted?: boolean;
   priceLabel?: string | null;
   createdAt?: string | Date;
@@ -10,7 +9,6 @@ interface ListingBadgesProps {
 }
 
 export function ListingBadges({
-  isVerified,
   isPromoted,
   priceLabel,
   createdAt,
@@ -34,20 +32,6 @@ export function ListingBadges({
         </Badge>,
       );
     }
-  }
-
-  // "AI Verified" badge
-  if (isVerified) {
-    badges.push(
-      <Badge
-        key="verified"
-        variant="secondary"
-        className="gap-1 bg-primary/10 text-primary border-primary/20"
-      >
-        <ShieldCheck className="h-3 w-3" />
-        AI Verified
-      </Badge>,
-    );
   }
 
   // "Great Deal" badge

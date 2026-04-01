@@ -393,21 +393,6 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Left: Payment Form */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Official Verification Alert (if available) */}
-            {listing.verifiedByOfficial && listing.verificationSource && (
-              <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950">
-                <ShieldCheck className="h-5 w-5 text-blue-600" />
-                <AlertTitle className="text-blue-800 dark:text-blue-200">
-                  Officially Verified
-                </AlertTitle>
-                <AlertDescription className="text-blue-700 dark:text-blue-300">
-                  This listing has been officially verified by{" "}
-                  <strong>{listing.verificationSource}</strong>. This is the highest level of
-                  authenticity assurance.
-                </AlertDescription>
-              </Alert>
-            )}
-
             {/* AI Verification Alert */}
             {verificationScore >= 80 && (
               <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
@@ -449,7 +434,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ listingId: 
             )}
 
             {/* No AI Verification Alert */}
-            {verificationScore === 0 && !listing.verifiedByOfficial && (
+            {verificationScore === 0 && (
               <Alert className="border-gray-300 bg-gray-50 dark:bg-gray-900 dark:border-gray-700">
                 <AlertCircle className="h-5 w-5 text-gray-500" />
                 <AlertTitle className="text-gray-800 dark:text-gray-200">

@@ -517,7 +517,7 @@ export default function ListingsPage() {
                                 }`}
                               />
                             </button>
-                            {listing.verifiedByOfficial && (
+                            {listing.isVerified && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="absolute right-2 top-12 rounded-full bg-primary p-1.5 cursor-help">
@@ -525,14 +525,8 @@ export default function ListingsPage() {
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent side="left">
-                                  <div className="max-w-xs">
-                                    <p className="font-semibold">Officially Verified</p>
-                                    {listing.verificationSource ? (
-                                      <p className="text-xs mt-1">Verified by {listing.verificationSource}</p>
-                                    ) : (
-                                      <p className="text-xs mt-1">Verified by official sources</p>
-                                    )}
-                                  </div>
+                                  <p className="font-semibold">AI Verified</p>
+                                  <p className="text-xs mt-1">Authenticity verified by Cadence AI</p>
                                 </TooltipContent>
                               </Tooltip>
                             )}
@@ -589,7 +583,6 @@ export default function ListingsPage() {
                           </div>
 
                           <ListingBadges
-                            isVerified={listing.isVerified}
                             isPromoted={listing.isPromoted}
                             priceLabel={listing.priceLabel}
                             createdAt={listing.createdAt}
