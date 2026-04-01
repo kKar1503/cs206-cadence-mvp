@@ -764,6 +764,34 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
                   {isSubmitting ? "Updating..." : "Update Listing"}
                 </Button>
               </div>
+
+              {/* Delete Listing */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full" disabled={isDeleting}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {isDeleting ? "Deleting..." : "Delete Listing"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete &quot;{formData.title}&quot;?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete this listing and all associated data
+                      (favorites, reviews, price data). This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => void handleDelete()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Permanently
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </form>
           </CardContent>
         </Card>
@@ -793,44 +821,6 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
               <span className="mr-2">✨</span>
               {isLoading ? "Loading..." : "Start AI Verification"}
             </Button>
-          </CardContent>
-        </Card>
-
-        {/* Danger Zone — Delete Listing */}
-        <Card className="border-destructive/50">
-          <CardHeader>
-            <CardTitle className="text-destructive text-lg">Danger Zone</CardTitle>
-            <CardDescription>
-              Permanently delete this listing. This action cannot be undone.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={isDeleting}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {isDeleting ? "Deleting..." : "Delete Listing"}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete &quot;{formData.title}&quot;?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete this listing and all associated data
-                    (favorites, reviews, price data). This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => void handleDelete()}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    Delete Permanently
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </CardContent>
         </Card>
       </div>
