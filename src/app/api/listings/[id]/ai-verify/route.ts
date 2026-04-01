@@ -63,15 +63,19 @@ async function analyzeAuthenticity(
     messages: [
       {
         role: "system",
-        content: `You are an expert music media authenticator specializing in ${listing.type} items. Analyze the provided images and assess authenticity.${demoContext}
+        content: `You are a strict and skeptical music media authenticator specializing in ${listing.type} items. Your job is to protect buyers from counterfeit or misrepresented items.${demoContext}
+
+CRITICAL RULES:
+1. FIRST, check if the images actually show the claimed item ("${listing.title}" by ${listing.artist}). If the images do NOT show this item (e.g., random photos, screenshots, unrelated objects, memes, or no relevant music media), score ALL fields between 5-25 and explain that the images do not match the listing.
+2. If images are blurry, dark, or too few to assess properly, score conservatively (30-50 range). Do NOT give the benefit of the doubt.
+3. Only score above 70 when you can clearly see specific authenticity indicators in the images (labels, matrix numbers, typography, packaging details).
+4. A score of 80+ means you have strong visual evidence of authenticity. A score of 90+ means near-certain authenticity with multiple clear indicators visible.
 
 Evaluate the following aspects for this ${listing.type}:
 - ${labels.authenticity.labelMatch}: How well do visible branding/label elements match known authentic versions?
 - ${labels.authenticity.matrixNumber}: Are catalog numbers, serial numbers, or identifiers consistent with authentic releases?
 - ${labels.authenticity.typography}: Does the typography on labels, sleeves, or packaging match expected fonts and layouts?
 - ${labels.authenticity.serialRange}: Do barcodes, holograms, serial numbers, or other identifiers fall within expected ranges?
-
-Always score ALL fields — never return 0. If you cannot assess a field, score based on overall impression (60-75 range).
 
 Return a JSON object with exactly these fields:
 {
@@ -80,21 +84,21 @@ Return a JSON object with exactly these fields:
   "matrixNumberScore": <number 0-100, ${labels.authenticity.matrixNumber}>,
   "typographyScore": <number 0-100, ${labels.authenticity.typography}>,
   "serialRangeScore": <number 0-100, ${labels.authenticity.serialRange}>,
-  "authenticityNotes": "<2-3 sentence analysis of key findings>",
-  "labelMatchJustification": "<1 sentence explaining why ${labels.authenticity.labelMatch} received its score>",
-  "matrixNumberJustification": "<1 sentence explaining why ${labels.authenticity.matrixNumber} received its score>",
-  "typographyJustification": "<1 sentence explaining why ${labels.authenticity.typography} received its score>",
-  "serialRangeJustification": "<1 sentence explaining why ${labels.authenticity.serialRange} received its score>"
+  "authenticityNotes": "<2-3 sentence analysis — be honest about what you can and cannot verify from the images>",
+  "labelMatchJustification": "<1 sentence explaining the score for ${labels.authenticity.labelMatch}>",
+  "matrixNumberJustification": "<1 sentence explaining the score for ${labels.authenticity.matrixNumber}>",
+  "typographyJustification": "<1 sentence explaining the score for ${labels.authenticity.typography}>",
+  "serialRangeJustification": "<1 sentence explaining the score for ${labels.authenticity.serialRange}>"
 }
 
-Use decimal precision (e.g., 87.3).`,
+Use decimal precision (e.g., 42.5, 78.3). Be critical — it is better to under-score than to falsely assure a buyer.`,
       },
       {
         role: "user",
         content: [
           {
             type: "text",
-            text: `Authenticate this ${listing.type} listing:\n- Title: "${listing.title}"\n- Artist: ${listing.artist}\n- Year: ${listing.year ?? "Unknown"}\n- Label: ${listing.label ?? "Unknown"}\n\nPlease analyze the following images:`,
+            text: `Authenticate this ${listing.type} listing:\n- Title: "${listing.title}"\n- Artist: ${listing.artist}\n- Year: ${listing.year ?? "Unknown"}\n- Label: ${listing.label ?? "Unknown"}\n\nPlease carefully analyze the following images and verify they actually show this item:`,
           },
           ...imageParts,
         ],
@@ -125,17 +129,22 @@ async function analyzeCondition(
     messages: [
       {
         role: "system",
-        content: `You are an expert music media condition grader specializing in ${listing.type} items. Analyze the provided images and assess physical condition.${demoContext}
+        content: `You are a strict music media condition grader specializing in ${listing.type} items. Your job is to honestly assess physical condition from the images provided.${demoContext}
 
-The seller describes this item as: ${listing.condition} condition.
+The seller claims this item is in "${listing.condition}" condition.
+
+CRITICAL RULES:
+1. FIRST, check if the images actually show the claimed item ("${listing.title}" by ${listing.artist}). If the images do NOT show this item or any relevant music media, score ALL fields between 5-25.
+2. Only assess what you can ACTUALLY SEE in the images. Do NOT trust the seller's condition claim — verify it visually.
+3. If you cannot clearly see a specific aspect (e.g., edges are not visible, label is not shown), score that aspect in the 30-45 range and explain you could not assess it from the provided images.
+4. Score above 80 only when the item is clearly in very good condition with visible evidence. Score above 90 only for genuinely pristine items.
+5. Look for: scratches, wear, ring wear, corner damage, spine damage, label peeling, discoloration, creases, and other defects.
 
 Evaluate the following aspects for this ${listing.type}:
 - ${labels.condition.surface}: Physical condition of the main media/item
 - ${labels.condition.sleeve}: Condition of the sleeve, case, or packaging
 - ${labels.condition.label}: Condition of labels, prints, or graphics
 - ${labels.condition.edges}: Condition of edges, corners, seams, or connectors
-
-Always score ALL fields — never return 0. If you cannot assess a field, score based on the seller's condition claim (60-75 range).
 
 Return a JSON object with exactly these fields:
 {
@@ -144,21 +153,21 @@ Return a JSON object with exactly these fields:
   "sleeveScore": <number 0-100, ${labels.condition.sleeve}>,
   "labelConditionScore": <number 0-100, ${labels.condition.label}>,
   "edgesScore": <number 0-100, ${labels.condition.edges}>,
-  "conditionNotes": "<2-3 sentence condition assessment>",
-  "surfaceJustification": "<1 sentence explaining why ${labels.condition.surface} received its score>",
-  "sleeveJustification": "<1 sentence explaining why ${labels.condition.sleeve} received its score>",
-  "labelJustification": "<1 sentence explaining why ${labels.condition.label} received its score>",
-  "edgesJustification": "<1 sentence explaining why ${labels.condition.edges} received its score>"
+  "conditionNotes": "<2-3 sentence honest condition assessment — mention what you can and cannot see>",
+  "surfaceJustification": "<1 sentence explaining the score for ${labels.condition.surface}>",
+  "sleeveJustification": "<1 sentence explaining the score for ${labels.condition.sleeve}>",
+  "labelJustification": "<1 sentence explaining the score for ${labels.condition.label}>",
+  "edgesJustification": "<1 sentence explaining the score for ${labels.condition.edges}>"
 }
 
-Use decimal precision (e.g., 87.3).`,
+Use decimal precision (e.g., 42.5, 78.3). Be honest — buyers rely on your assessment.`,
       },
       {
         role: "user",
         content: [
           {
             type: "text",
-            text: `Assess the condition of this ${listing.type}:\n- Title: "${listing.title}" by ${listing.artist}\n- Seller's condition claim: ${listing.condition}\n\nPlease analyze the following images:`,
+            text: `Assess the condition of this ${listing.type}:\n- Title: "${listing.title}" by ${listing.artist}\n- Seller's condition claim: ${listing.condition}\n\nPlease carefully analyze the following images and verify they show this item:`,
           },
           ...imageParts,
         ],
