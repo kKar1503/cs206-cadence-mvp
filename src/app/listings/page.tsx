@@ -624,11 +624,6 @@ export default function ListingsPage() {
                             </div>
                           </div>
 
-                          {listing.isVerified && listing.authenticityScore && (
-                            <div className="mt-2 text-xs text-primary">
-                              {listing.authenticityScore.toFixed(1)}% authentic
-                            </div>
-                          )}
                         </CardContent>
                       </Card>
                     </Link>
