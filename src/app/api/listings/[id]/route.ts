@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { auth } from "@/server/auth";
 import { notifyFavoriters } from "@/lib/notifications";
+import { buildTasteProfile } from "@/lib/recommendations";
 import type { ListingType, Condition } from "@prisma/generated";
 
 export async function GET(
@@ -41,24 +42,64 @@ export async function GET(
       data: { views: { increment: 1 } },
     });
 
-    // Fetch related listings: same type or same artist, exclude current
-    const related = await db.listing.findMany({
-      where: {
-        id: { not: id },
-        isSold: false,
-        OR: [
-          { type: listing.type },
-          { artist: listing.artist },
-        ],
-      },
-      include: {
-        seller: {
-          select: { name: true },
+    // Fetch related listings — taste-ranked if user is authenticated
+    const session = await auth();
+    let related;
+
+    if (session?.user?.id) {
+      // Taste-based: fetch more candidates, score, rank, take top 4
+      const profile = await buildTasteProfile(session.user.id);
+      const candidates = await db.listing.findMany({
+        where: {
+          id: { not: id },
+          isSold: false,
+          OR: [
+            { type: listing.type },
+            { artist: listing.artist },
+            ...(listing.genre ? [{ genre: listing.genre }] : []),
+          ],
         },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-    });
+        include: { seller: { select: { name: true } } },
+        take: 20,
+      });
+
+      if (profile.totalSignals > 0) {
+        // Score by taste match
+        related = candidates
+          .map((c) => {
+            let score = 0;
+            if (profile.artists[c.artist]) score += 30;
+            if (c.genre && profile.genres[c.genre]) score += 25;
+            if (c.year) {
+              const decade = `${Math.floor(c.year / 10) * 10}s`;
+              if (profile.decades[decade]) score += 15;
+            }
+            if (profile.types[c.type]) score += 10;
+            if (c.label && profile.labels[c.label]) score += 10;
+            return { ...c, _score: score };
+          })
+          .sort((a, b) => b._score - a._score)
+          .slice(0, 4)
+          .map(({ _score, ...rest }) => rest);
+      } else {
+        related = candidates.slice(0, 4);
+      }
+    } else {
+      // Fallback: simple type/artist match
+      related = await db.listing.findMany({
+        where: {
+          id: { not: id },
+          isSold: false,
+          OR: [
+            { type: listing.type },
+            { artist: listing.artist },
+          ],
+        },
+        include: { seller: { select: { name: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 4,
+      });
+    }
 
     return NextResponse.json({ listing, related });
   } catch (error) {

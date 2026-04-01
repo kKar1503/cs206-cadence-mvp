@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ShieldCheck, Search, Sparkles, Package, CheckCircle2, BarChart3, Eye, ArrowRight } from "lucide-react";
 import { StaggeredGrid } from "@/components/ui/fade-in-section";
+import { Recommendations } from "@/components/recommendations";
 import { db } from "@/server/db";
 
 interface ListingWithSeller {
@@ -442,6 +443,9 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Personalized Recommendations (client component — only shows for authenticated users with taste data) */}
+      <Recommendations />
 
       {/* Latest Listings Section */}
       {latestListings.length > 0 && (

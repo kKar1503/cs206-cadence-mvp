@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Search, ShieldCheck, Eye, SlidersHorizontal, Heart, TrendingDown, TrendingUp, Minus, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ConditionGradingGuide } from "@/components/ConditionGradingGuide";
@@ -52,6 +52,7 @@ export default function ListingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
   const [togglingFavoriteId, setTogglingFavoriteId] = useState<string | null>(null);
+  const [recommendedMap, setRecommendedMap] = useState<Map<string, string>>(new Map());
 
   const listingTypes = ["VINYL", "CD", "CASSETTE", "MERCH", "EQUIPMENT"];
   const conditions = ["BRAND_NEW", "LIKE_NEW", "LIGHTLY_USED", "WELL_USED", "HEAVILY_USED"];
@@ -118,9 +119,9 @@ export default function ListingsPage() {
   }, []);
 
   useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!session?.user?.id) return;
+    if (!session?.user?.id) return;
 
+    const fetchFavorites = async () => {
       try {
         const res = await fetch("/api/favorites");
         if (res.ok) {
@@ -131,7 +132,25 @@ export default function ListingsPage() {
         console.error("Failed to fetch favorites:", err);
       }
     };
+
+    const fetchRecommendations = async () => {
+      try {
+        const res = await fetch("/api/recommendations");
+        if (res.ok) {
+          const data = await res.json() as {
+            recommendations: Array<{ id: string; matchReason: string }>;
+          };
+          const map = new Map<string, string>();
+          data.recommendations.forEach((r) => map.set(r.id, r.matchReason));
+          setRecommendedMap(map);
+        }
+      } catch {
+        // Non-critical
+      }
+    };
+
     void fetchFavorites();
+    void fetchRecommendations();
   }, [session]);
 
   const fetchListings = async () => {
@@ -462,9 +481,19 @@ export default function ListingsPage() {
                   {filteredListings.length} listing{filteredListings.length !== 1 ? "s" : ""} found
                 </div>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredListings.map((listing) => (
+                  {filteredListings.map((listing) => {
+                    const matchReason = recommendedMap.get(listing.id);
+                    const isRecommended = !!matchReason;
+
+                    return (
                     <Link key={listing.id} href={`/listings/${listing.id}`}>
-                      <Card className="group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg py-0 gap-0">
+                      <Card className={`group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg py-0 gap-0 ${isRecommended ? "ring-2 ring-primary/30 bg-primary/[0.02]" : ""}`}>
+                        {isRecommended && (
+                          <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
+                            <Sparkles className="h-3 w-3" />
+                            {matchReason}
+                          </div>
+                        )}
                         <CardHeader className="p-0">
                           <div className="relative aspect-square overflow-hidden">
                             <Image
@@ -603,7 +632,8 @@ export default function ListingsPage() {
                         </CardContent>
                       </Card>
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
