@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { notifyFollowers } from "@/lib/notifications";
+import { generateFakePriceComparison } from "@/lib/fake-price-comparison";
 import type { ListingType, Condition } from "@prisma/generated";
 
 export async function POST(request: Request) {
@@ -77,6 +78,9 @@ export async function POST(request: Request) {
         sellerId: user.id,
       },
     });
+
+    // Generate fake price comparison data
+    generateFakePriceComparison(listing.id, price).catch(console.error);
 
     // Notify followers of this seller (fire-and-forget)
     notifyFollowers(user.id, user.name ?? "A seller", listing.id, title).catch(console.error);
