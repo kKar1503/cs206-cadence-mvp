@@ -52,6 +52,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
   const [images, setImages] = useState<ImageUpload[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [tracklist, setTracklist] = useState<Array<{ side: string; tracks: string[] }>>([]);
+  const [hasExistingVerification, setHasExistingVerification] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -85,6 +86,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
           images: string;
           tracklist: string | null;
           sellerId: string;
+          authenticityScore: number | null;
         }};
 
         const listing = data.listing;
@@ -106,6 +108,8 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
           genre: listing.genre ?? "",
           label: listing.label ?? "",
         });
+
+        setHasExistingVerification(listing.authenticityScore !== null);
 
         // Parse existing images
         try {
@@ -801,26 +805,55 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <span className="text-xl">✨</span>
-              AI Verification
+              {hasExistingVerification ? "AI Re-verification" : "AI Verification"}
             </CardTitle>
             <CardDescription>
-              Boost buyer confidence with an AI-generated authenticity score
+              {hasExistingVerification
+                ? "Re-run verification to update your authenticity and condition scores"
+                : "Boost buyer confidence with an AI-generated authenticity score"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Run our AI verification process to analyze your listing and provide an authenticity score.
-              This helps buyers trust your listing and can increase your chances of selling.
+              {hasExistingVerification
+                ? "This will re-analyze your listing and overwrite the existing verification scores. Use this if you've updated images or details since the last verification."
+                : "Run our AI verification process to analyze your listing and provide an authenticity score. This helps buyers trust your listing and can increase your chances of selling."}
             </p>
-            <Button
-              variant="default"
-              onClick={() => router.push(`/listings/${id}/ai-verify`)}
-              disabled={isSubmitting}
-              className="w-full sm:w-auto"
-            >
-              <span className="mr-2">✨</span>
-              {isLoading ? "Loading..." : "Start AI Verification"}
-            </Button>
+            {hasExistingVerification ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="default" disabled={isSubmitting} className="w-full sm:w-auto">
+                    <span className="mr-2">✨</span>
+                    {isLoading ? "Loading..." : "Start Re-verification"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Re-verify this listing?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will overwrite the existing authenticity and condition scores with new results.
+                      The previous verification data cannot be recovered. Are you sure you want to proceed?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => router.push(`/listings/${id}/ai-verify`)}>
+                      Proceed with Re-verification
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <Button
+                variant="default"
+                onClick={() => router.push(`/listings/${id}/ai-verify`)}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto"
+              >
+                <span className="mr-2">✨</span>
+                {isLoading ? "Loading..." : "Start AI Verification"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
