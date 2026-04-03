@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   ShieldCheck,
+  ShieldAlert,
   Eye,
   ChevronLeft,
   ChevronRight,
@@ -30,6 +31,8 @@ import {
   Minus,
   Info,
   Megaphone,
+  BarChart3,
+  CheckCircle2,
 } from "lucide-react";
 import { getScoringLabels } from "@/lib/scoring-labels";
 import { ConditionGradingGuide } from "@/components/ConditionGradingGuide";
@@ -410,22 +413,26 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
             {/* AI Insights Overview */}
             {!showAuthenticityDetails && !showConditionDetails && (listing.authenticityScore ?? listing.conditionScore) && (
-              <Card className="border-2">
-                <CardHeader className="pb-3">
-                  <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-6">
+              <Card className="overflow-hidden border-0 shadow-md !py-0 !gap-0">
+                <div className="bg-orange-50 border-b border-orange-100 px-5 py-3 flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+                    <ShieldCheck className="h-4 w-4 text-orange-700" />
+                  </div>
+                  <h3 className="font-semibold text-sm tracking-wide uppercase text-orange-900">AI Insight Overview</h3>
+                </div>
+                <CardContent className="p-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     {/* Authenticity Score */}
                     {listing.authenticityScore && (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Authenticity</span>
-                          <span className="font-bold text-lg">{listing.authenticityScore.toFixed(1)}%</span>
-                        </div>
-                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                      <div className={`rounded-xl p-4 text-center ${listing.authenticityScore >= 80 ? "bg-green-50 ring-1 ring-green-200" : listing.authenticityScore >= 50 ? "bg-yellow-50 ring-1 ring-yellow-200" : "bg-red-50 ring-1 ring-red-200"}`}>
+                        <p className="text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Authenticity</p>
+                        <p className={`text-3xl font-bold tabular-nums ${listing.authenticityScore >= 80 ? "text-green-700" : listing.authenticityScore >= 50 ? "text-yellow-700" : "text-red-700"}`}>
+                          {listing.authenticityScore.toFixed(1)}
+                          <span className="text-base font-semibold">%</span>
+                        </p>
+                        <div className="mt-2.5 h-1.5 bg-white/80 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-primary to-primary/80"
+                            className={`h-full rounded-full ${listing.authenticityScore >= 80 ? "bg-green-500" : listing.authenticityScore >= 50 ? "bg-yellow-500" : "bg-red-500"}`}
                             style={{ width: `${listing.authenticityScore}%` }}
                           />
                         </div>
@@ -434,14 +441,15 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
                     {/* Condition Score */}
                     {listing.conditionScore && (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Condition</span>
-                          <span className="font-bold text-lg">{listing.conditionScore.toFixed(1)}%</span>
-                        </div>
-                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                      <div className={`rounded-xl p-4 text-center ${listing.conditionScore >= 80 ? "bg-green-50 ring-1 ring-green-200" : listing.conditionScore >= 50 ? "bg-yellow-50 ring-1 ring-yellow-200" : "bg-red-50 ring-1 ring-red-200"}`}>
+                        <p className="text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">Condition</p>
+                        <p className={`text-3xl font-bold tabular-nums ${listing.conditionScore >= 80 ? "text-green-700" : listing.conditionScore >= 50 ? "text-yellow-700" : "text-red-700"}`}>
+                          {listing.conditionScore.toFixed(1)}
+                          <span className="text-base font-semibold">%</span>
+                        </p>
+                        <div className="mt-2.5 h-1.5 bg-white/80 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-primary to-primary/80"
+                            className={`h-full rounded-full ${listing.conditionScore >= 80 ? "bg-green-500" : listing.conditionScore >= 50 ? "bg-yellow-500" : "bg-red-500"}`}
                             style={{ width: `${listing.conditionScore}%` }}
                           />
                         </div>
@@ -452,12 +460,10 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                   {/* View Details Link */}
                   {(listing.authenticityNotes ?? listing.conditionNotes) && (
                     <button
-                      onClick={() => {
-                        setShowAuthenticityDetails(true);
-                      }}
-                      className="flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                      onClick={() => setShowAuthenticityDetails(true)}
+                      className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors"
                     >
-                      View Details
+                      View Detailed Breakdown
                       <ChevronRight className="h-4 w-4" />
                     </button>
                   )}
@@ -467,178 +473,196 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
             {/* Authenticity Details */}
             {showAuthenticityDetails && listing.authenticityScore && (
-              <Card className="border-2">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
-                    <button
-                      onClick={() => setShowAuthenticityDetails(false)}
-                      className="text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Authenticity Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-semibold text-base">Authenticity</span>
-                      <span className="font-bold text-xl">{listing.authenticityScore.toFixed(1)}%</span>
+              <Card className="overflow-hidden border-0 shadow-md !py-0 !gap-0">
+                <div className="bg-orange-50 border-b border-orange-100 px-5 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+                      <ShieldCheck className="h-4 w-4 text-orange-700" />
                     </div>
+                    <h3 className="font-semibold text-sm tracking-wide uppercase text-orange-900">Authenticity Analysis</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowAuthenticityDetails(false)}
+                    className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors px-2.5 py-1 rounded-md hover:bg-gray-100"
+                  >
+                    Close
+                  </button>
+                </div>
+                <CardContent className="p-5 space-y-5">
+                  {/* Overall score */}
+                  <div className="flex items-center gap-4">
+                    <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${listing.authenticityScore >= 80 ? "bg-green-100 text-green-800 ring-1 ring-green-200" : listing.authenticityScore >= 50 ? "bg-yellow-100 text-yellow-800 ring-1 ring-yellow-200" : "bg-red-100 text-red-800 ring-1 ring-red-200"}`}>
+                      <span className="text-2xl font-bold tabular-nums">{Math.round(listing.authenticityScore)}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">{listing.authenticityScore >= 80 ? "High Authenticity" : listing.authenticityScore >= 50 ? "Moderate Authenticity" : "Low Authenticity"}</p>
+                      {listing.authenticityNotes && (
+                        <p className="text-sm text-gray-600 mt-0.5 leading-snug">{listing.authenticityNotes}</p>
+                      )}
+                    </div>
+                  </div>
 
-                    {listing.authenticityNotes && (
-                      <p className="text-sm text-muted-foreground mb-4">{listing.authenticityNotes}</p>
-                    )}
-
-                    {/* Authenticity Breakdown */}
-                    <div className="space-y-3">
-                      {(() => {
-                        const labels = getScoringLabels(listing.type);
-                        const justifications: Justifications = listing.authenticityJustifications
-                          ? JSON.parse(listing.authenticityJustifications) as Justifications
-                          : {};
-                        const items = [
-                          { label: labels.authenticity.labelMatch, score: listing.labelMatchScore, justification: justifications.labelMatch },
-                          { label: labels.authenticity.matrixNumber, score: listing.matrixNumberScore, justification: justifications.matrixNumber },
-                          { label: labels.authenticity.typography, score: listing.typographyScore, justification: justifications.typography },
-                          { label: labels.authenticity.serialRange, score: listing.serialRangeScore, justification: justifications.serialRange },
-                        ];
-                        return items.map(({ label, score, justification }) => score !== null && (
-                          <div key={label}>
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm min-w-[120px]">{label}</span>
-                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-primary"
-                                  style={{ width: `${score}%` }}
-                                />
-                              </div>
-                              <span className={`text-sm font-semibold min-w-[50px] text-right ${score >= 70 ? "text-green-600" : "text-orange-600"}`}>
-                                {score}%
-                              </span>
+                  {/* Breakdown */}
+                  <div className="space-y-2">
+                    {(() => {
+                      const labels = getScoringLabels(listing.type);
+                      const justifications: Justifications = listing.authenticityJustifications
+                        ? JSON.parse(listing.authenticityJustifications) as Justifications
+                        : {};
+                      const items = [
+                        { label: labels.authenticity.labelMatch, score: listing.labelMatchScore, justification: justifications.labelMatch },
+                        { label: labels.authenticity.matrixNumber, score: listing.matrixNumberScore, justification: justifications.matrixNumber },
+                        { label: labels.authenticity.typography, score: listing.typographyScore, justification: justifications.typography },
+                        { label: labels.authenticity.serialRange, score: listing.serialRangeScore, justification: justifications.serialRange },
+                      ];
+                      return items.map(({ label, score, justification }) => score !== null && (
+                        <div key={label} className={`rounded-lg p-3 ${score >= 70 ? "bg-green-50/80" : "bg-orange-50/80"}`}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              {score >= 70
+                                ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                                : <AlertCircle className="h-3.5 w-3.5 text-orange-600" />
+                              }
+                              <span className="text-sm font-medium text-gray-800">{label}</span>
                             </div>
-                            {justification && (
-                              <p className="mt-1 ml-[132px] text-xs text-muted-foreground">{justification}</p>
-                            )}
+                            <span className={`text-sm font-bold tabular-nums ${score >= 70 ? "text-green-700" : "text-orange-700"}`}>
+                              {score}%
+                            </span>
                           </div>
-                        ));
-                      })()}
-                    </div>
-
-                    {/* Navigation buttons */}
-                    {listing.conditionScore && (
-                      <div className="flex items-center justify-end mt-6">
-                        <button
-                          onClick={() => {
-                            setShowAuthenticityDetails(false);
-                            setShowConditionDetails(true);
-                          }}
-                          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                        >
-                          View Condition Details
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
+                          <div className="h-1.5 bg-white rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${score >= 70 ? "bg-green-500" : "bg-orange-500"}`}
+                              style={{ width: `${score}%` }}
+                            />
+                          </div>
+                          {justification && (
+                            <p className="mt-1.5 text-xs text-gray-600 leading-snug">{justification}</p>
+                          )}
+                        </div>
+                      ));
+                    })()}
                   </div>
+
+                  {/* Navigation */}
+                  {listing.conditionScore && (
+                    <button
+                      onClick={() => {
+                        setShowAuthenticityDetails(false);
+                        setShowConditionDetails(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors"
+                    >
+                      View Condition Details
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  )}
                 </CardContent>
               </Card>
             )}
 
             {/* Condition Details */}
             {showConditionDetails && listing.conditionScore && (
-              <Card className="border-2">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg">Cadence AI Insight Overview</h3>
-                    <button
-                      onClick={() => setShowConditionDetails(false)}
-                      className="text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      Close
-                    </button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Condition Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-semibold text-base">Condition</span>
-                      <span className="font-bold text-xl">{listing.conditionScore.toFixed(1)}%</span>
+              <Card className="overflow-hidden border-0 shadow-md !py-0 !gap-0">
+                <div className="bg-orange-50 border-b border-orange-100 px-5 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
+                      <Eye className="h-4 w-4 text-orange-700" />
                     </div>
+                    <h3 className="font-semibold text-sm tracking-wide uppercase text-orange-900">Condition Analysis</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowConditionDetails(false)}
+                    className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors px-2.5 py-1 rounded-md hover:bg-gray-100"
+                  >
+                    Close
+                  </button>
+                </div>
+                <CardContent className="p-5 space-y-5">
+                  {/* Overall score */}
+                  <div className="flex items-center gap-4">
+                    <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${listing.conditionScore >= 80 ? "bg-green-100 text-green-800 ring-1 ring-green-200" : listing.conditionScore >= 50 ? "bg-yellow-100 text-yellow-800 ring-1 ring-yellow-200" : "bg-red-100 text-red-800 ring-1 ring-red-200"}`}>
+                      <span className="text-2xl font-bold tabular-nums">{Math.round(listing.conditionScore)}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900">{listing.conditionScore >= 80 ? "Excellent Condition" : listing.conditionScore >= 50 ? "Fair Condition" : "Poor Condition"}</p>
+                      {listing.conditionNotes && (
+                        <p className="text-sm text-gray-600 mt-0.5 leading-snug">{listing.conditionNotes}</p>
+                      )}
+                    </div>
+                  </div>
 
-                    {listing.conditionNotes && (
-                      <p className="text-sm text-muted-foreground mb-4">{listing.conditionNotes}</p>
-                    )}
-
-                    {/* Condition Breakdown */}
-                    <div className="space-y-3">
-                      {(() => {
-                        const labels = getScoringLabels(listing.type);
-                        const justifications: Justifications = listing.conditionJustifications
-                          ? JSON.parse(listing.conditionJustifications) as Justifications
-                          : {};
-                        const items = [
-                          { label: labels.condition.surface, score: listing.vinylSurfaceScore, justification: justifications.surface },
-                          { label: labels.condition.sleeve, score: listing.sleeveScore, justification: justifications.sleeve },
-                          { label: labels.condition.label, score: listing.labelConditionScore, justification: justifications.label },
-                          { label: labels.condition.edges, score: listing.edgesScore, justification: justifications.edges },
-                        ];
-                        return items.map(({ label, score, justification }) => score !== null && (
-                          <div key={label}>
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm min-w-[120px]">{label}</span>
-                              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-primary"
-                                  style={{ width: `${score}%` }}
-                                />
-                              </div>
-                              <span className={`text-sm font-semibold min-w-[50px] text-right ${score >= 70 ? "text-green-600" : "text-orange-600"}`}>
-                                {score}%
-                              </span>
+                  {/* Breakdown */}
+                  <div className="space-y-2">
+                    {(() => {
+                      const labels = getScoringLabels(listing.type);
+                      const justifications: Justifications = listing.conditionJustifications
+                        ? JSON.parse(listing.conditionJustifications) as Justifications
+                        : {};
+                      const items = [
+                        { label: labels.condition.surface, score: listing.vinylSurfaceScore, justification: justifications.surface },
+                        { label: labels.condition.sleeve, score: listing.sleeveScore, justification: justifications.sleeve },
+                        { label: labels.condition.label, score: listing.labelConditionScore, justification: justifications.label },
+                        { label: labels.condition.edges, score: listing.edgesScore, justification: justifications.edges },
+                      ];
+                      return items.map(({ label, score, justification }) => score !== null && (
+                        <div key={label} className={`rounded-lg p-3 ${score >= 70 ? "bg-green-50/80" : "bg-orange-50/80"}`}>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              {score >= 70
+                                ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                                : <AlertCircle className="h-3.5 w-3.5 text-orange-600" />
+                              }
+                              <span className="text-sm font-medium text-gray-800">{label}</span>
                             </div>
-                            {justification && (
-                              <p className="mt-1 ml-[132px] text-xs text-muted-foreground">{justification}</p>
-                            )}
+                            <span className={`text-sm font-bold tabular-nums ${score >= 70 ? "text-green-700" : "text-orange-700"}`}>
+                              {score}%
+                            </span>
                           </div>
-                        ));
-                      })()}
-                    </div>
-
-                    {/* Navigation buttons */}
-                    {listing.authenticityScore && (
-                      <div className="flex items-center justify-start mt-6">
-                        <button
-                          onClick={() => {
-                            setShowConditionDetails(false);
-                            setShowAuthenticityDetails(true);
-                          }}
-                          className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          View Authenticity Details
-                        </button>
-                      </div>
-                    )}
+                          <div className="h-1.5 bg-white rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${score >= 70 ? "bg-green-500" : "bg-orange-500"}`}
+                              style={{ width: `${score}%` }}
+                            />
+                          </div>
+                          {justification && (
+                            <p className="mt-1.5 text-xs text-gray-600 leading-snug">{justification}</p>
+                          )}
+                        </div>
+                      ));
+                    })()}
                   </div>
+
+                  {/* Navigation */}
+                  {listing.authenticityScore && (
+                    <button
+                      onClick={() => {
+                        setShowConditionDetails(false);
+                        setShowAuthenticityDetails(true);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      View Authenticity Details
+                    </button>
+                  )}
                 </CardContent>
               </Card>
             )}
 
             {/* No AI Verification */}
             {!showAuthenticityDetails && !showConditionDetails && !listing.isVerified && listing.authenticityScore === null && (
-              <Card className="border-gray-300 bg-gray-50 dark:bg-gray-900/30 dark:border-gray-700">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gray-500" />
+              <Card className="overflow-hidden border-0 shadow-md !py-0 !gap-0">
+                <div className="bg-gray-100 border-b border-gray-200 px-5 py-3 flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200">
+                    <ShieldAlert className="h-4 w-4 text-gray-600" />
+                  </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Not AI Verified</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm font-semibold text-gray-800">Not AI Verified</p>
+                    <p className="text-xs text-gray-600">
                       This listing has not been verified by our AI authenticity system
                     </p>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             )}
           </div>
@@ -681,17 +705,19 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     })
                   : null;
                 return (
-                  <Card className={`mt-3 ${priceInfo.borderColor} ${priceInfo.bgColor}`}>
-                    <CardContent className="flex items-start gap-3 p-4">
-                      <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${priceInfo.color}`} />
+                  <Card className={`mt-3 overflow-hidden border-0 shadow-md !py-0 !gap-0`}>
+                    <div className={`${priceInfo.bgColor} border-b ${priceInfo.borderColor} px-5 py-3 flex items-center gap-3`}>
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${priceInfo.borderColor} border-2 bg-white`}>
+                        <Icon className={`h-5 w-5 ${priceInfo.color}`} />
+                      </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <p className={`text-sm font-semibold ${priceInfo.color}`}>
+                          <p className={`font-semibold ${priceInfo.color}`}>
                             {priceInfo.label}
                           </p>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className={`h-4 w-4 cursor-help ${priceInfo.color}`} />
+                              <Info className={`h-3.5 w-3.5 cursor-help ${priceInfo.color}`} />
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="max-w-xs text-xs">
@@ -703,21 +729,24 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                         <p className={`text-sm ${priceInfo.color}`}>
                           {listing.pricePercentage.toFixed(1)}% {priceInfo.description}
                         </p>
-                        {formattedDate && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Data updated: {formattedDate}
-                          </p>
-                        )}
-                        {listing.platformPrices && listing.platformPrices.length > 0 && (
-                          <button
-                            onClick={() => setShowPriceDetails(true)}
-                            className="flex items-center gap-2 text-sm text-primary hover:underline font-medium mt-2"
-                          >
-                            View Details
-                            <ChevronRight className="h-4 w-4" />
-                          </button>
-                        )}
                       </div>
+                    </div>
+                    <CardContent className="p-4 space-y-2">
+                      {formattedDate && (
+                        <p className="text-xs text-gray-500">
+                          Market data updated {formattedDate}
+                        </p>
+                      )}
+                      {listing.platformPrices && listing.platformPrices.length > 0 && (
+                        <button
+                          onClick={() => setShowPriceDetails(true)}
+                          className="w-full flex items-center justify-center gap-2 text-sm font-medium py-2 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors"
+                        >
+                          <BarChart3 className="h-4 w-4" />
+                          Compare Platform Prices
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -725,63 +754,74 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
 
               {/* Price Comparison Details */}
               {showPriceDetails && listing.platformPrices && listing.platformPrices.length > 0 && (
-                <Card className="mt-3 border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-lg">Cadence Price Overview</h3>
-                      <button
-                        onClick={() => setShowPriceDetails(false)}
-                        className="text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold text-center mb-4">PLATFORM PRICE COMPARISON</h4>
-                      <div className="space-y-3">
-                        {listing.platformPrices.map((platformPrice) => {
-                          const priceRange = platformPrice.minPrice && platformPrice.maxPrice
-                            ? `$${platformPrice.minPrice} - $${platformPrice.maxPrice}`
-                            : platformPrice.avgPrice
-                            ? `$${platformPrice.avgPrice.toFixed(2)}`
-                            : "N/A";
-
-                          const labelColorClass = platformPrice.priceLabel === "Optimal"
-                            ? "bg-yellow-100 text-yellow-800 border-yellow-300"
-                            : platformPrice.priceLabel === "Fair"
-                            ? "bg-green-100 text-green-800 border-green-300"
-                            : platformPrice.priceLabel === "Slightly High"
-                            ? "bg-orange-100 text-orange-800 border-orange-300"
-                            : "bg-gray-100 text-gray-800 border-gray-300";
-
-                          const isOptimal = platformPrice.priceLabel === "Optimal";
-
-                          return (
-                            <div
-                              key={platformPrice.id}
-                              className={`flex items-center justify-between p-3 rounded-md ${
-                                isOptimal ? "bg-yellow-50 border border-yellow-200" : ""
-                              }`}
-                            >
-                              <div className="font-medium">{platformPrice.platform}</div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-sm font-medium">{priceRange}</div>
-                                {platformPrice.priceLabel && (
-                                  <div
-                                    className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${labelColorClass}`}
-                                  >
-                                    {isOptimal && <span>★</span>}
-                                    {platformPrice.priceLabel}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                <Card className="mt-3 overflow-hidden border-0 shadow-md !py-0 !gap-0">
+                  <div className="bg-blue-50 border-b border-blue-100 px-5 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
+                        <BarChart3 className="h-4 w-4 text-blue-700" />
                       </div>
+                      <h3 className="font-semibold text-sm tracking-wide uppercase text-blue-900">Price Comparison</h3>
                     </div>
+                    <button
+                      onClick={() => setShowPriceDetails(false)}
+                      className="text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors px-2.5 py-1 rounded-md hover:bg-gray-100"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <CardContent className="p-5">
+                    <div className="space-y-2">
+                      {listing.platformPrices.map((platformPrice) => {
+                        const priceRange = platformPrice.minPrice && platformPrice.maxPrice
+                          ? `$${platformPrice.minPrice.toFixed(2)} – $${platformPrice.maxPrice.toFixed(2)}`
+                          : platformPrice.avgPrice
+                          ? `$${platformPrice.avgPrice.toFixed(2)}`
+                          : "N/A";
+
+                        const isOptimal = platformPrice.priceLabel === "Optimal";
+                        const isFair = platformPrice.priceLabel === "Fair";
+                        const isHigh = platformPrice.priceLabel === "Slightly High" || platformPrice.priceLabel === "High";
+
+                        const labelColorClass = isOptimal
+                          ? "bg-primary/10 text-primary"
+                          : isFair
+                          ? "bg-green-100 text-green-700"
+                          : isHigh
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-gray-100 text-gray-700";
+
+                        return (
+                          <div
+                            key={platformPrice.id}
+                            className={`flex items-center justify-between rounded-lg p-3.5 ${
+                              isOptimal ? "bg-primary/5 ring-1 ring-primary/20" : "bg-muted/30"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              {isOptimal && <Star className="h-4 w-4 text-primary fill-primary" />}
+                              <span className={`font-medium ${isOptimal ? "text-primary" : ""}`}>
+                                {platformPrice.platform}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <span className={`text-sm font-semibold tabular-nums ${isOptimal ? "text-primary" : ""}`}>
+                                {priceRange}
+                              </span>
+                              {platformPrice.priceLabel && (
+                                <span className={`px-2 py-0.5 rounded-md text-xs font-semibold ${labelColorClass}`}>
+                                  {platformPrice.priceLabel}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {listing.priceDataUpdated && (
+                      <p className="text-xs text-muted-foreground mt-3 text-center">
+                        Market data updated {new Date(listing.priceDataUpdated).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               )}
