@@ -44,6 +44,7 @@ export async function GET() {
           views: true,
           isSold: true,
           isPromoted: true,
+          promotedUntil: true,
           createdAt: true,
           images: true,
         },
