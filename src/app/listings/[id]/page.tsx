@@ -233,7 +233,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
   const [showAuthenticityDetails, setShowAuthenticityDetails] = useState(false);
   const [showConditionDetails, setShowConditionDetails] = useState(false);
   const [showPriceDetails, setShowPriceDetails] = useState(false);
-  const [isPromoting, setIsPromoting] = useState(false);
+
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -912,27 +912,10 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     size="lg"
                     variant="outline"
                     className="flex-1 gap-2"
-                    disabled={isPromoting}
-                    onClick={async () => {
-                      setIsPromoting(true);
-                      try {
-                        const res = await fetch(`/api/listings/${listing.id}/promote`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ days: 7 }),
-                        });
-                        if (res.ok) {
-                          setListing({ ...listing, isPromoted: true });
-                        }
-                      } catch (err) {
-                        console.error("Failed to promote:", err);
-                      } finally {
-                        setIsPromoting(false);
-                      }
-                    }}
+                    onClick={() => router.push(`/listings/${listing.id}/promote`)}
                   >
                     <Megaphone className="h-5 w-5" />
-                    {isPromoting ? "Promoting..." : "Promote Listing"}
+                    Promote Listing
                   </Button>
                 ) : (
                   <Button size="lg" variant="outline" className="flex-1 gap-2" disabled>

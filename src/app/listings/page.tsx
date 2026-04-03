@@ -485,13 +485,7 @@ export default function ListingsPage() {
 
                     return (
                     <Link key={listing.id} href={`/listings/${listing.id}`}>
-                      <Card className={`group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg py-0 gap-0 ${isRecommended ? "ring-2 ring-primary/30 bg-primary/[0.02]" : ""}`}>
-                        {isRecommended && (
-                          <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
-                            <Sparkles className="h-3 w-3" />
-                            {matchReason}
-                          </div>
-                        )}
+                      <Card className={`group h-full cursor-pointer overflow-hidden transition-all hover:shadow-lg py-0 gap-0 ${isRecommended ? "ring-2 ring-primary/30" : ""}`}>
                         <CardHeader className="p-0">
                           <div className="relative aspect-square overflow-hidden">
                             <Image
@@ -500,6 +494,12 @@ export default function ListingsPage() {
                               fill
                               className="object-cover transition-transform group-hover:scale-105"
                             />
+                            {isRecommended && (
+                              <div className="absolute bottom-0 left-0 right-0 z-10 flex items-center gap-1.5 bg-primary/90 px-3 py-1.5 text-xs font-medium text-white">
+                                <Sparkles className="h-3 w-3" />
+                                {matchReason}
+                              </div>
+                            )}
                             {/* Favorite button */}
                             <button
                               onClick={(e) => toggleFavorite(e, listing.id)}
